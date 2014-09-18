@@ -29,12 +29,6 @@
         <developerConnection>scm:git:git@github.com:kurbatov/firmata4j.git</developerConnection>
     </scm>
     
-    <parent>
-        <groupId>com.codefactory</groupId>
-        <artifactId>firmata-monitoring</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.resource.directory>src/main/resources</project.resource.directory>
@@ -59,6 +53,7 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
+            <version>6.8.8</version>
         </dependency>
     </dependencies>
     
