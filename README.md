@@ -1,6 +1,7 @@
 ## firmata4j
 **firmata4j** is a client library of [Firmata](http://www.firmata.org/) written
-in Java.
+in Java. The library allows controlling Arduino (or another
+board) which runs Firmata protocol from your java program.
 
 ## Capabilities
 - Interaction with a board and its pins in object-oriented style
@@ -103,7 +104,7 @@ frame.setVisible(true);
 the pin. State of the output pin can be changed by double click on it.
 
 An example of `JPinboard` usage can be found in
-[`org.firmata4j.Example` class](https://raw.github.com/kurbatov/firmata4j/master/src/main/java/org/firmata4j/Example.java).
+[`org.firmata4j.Example` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
 
 ## Versions
 **firmata4j** sticks to Firmata protocol versions. The first available version
@@ -149,4 +150,4 @@ If you have an improvement to share, please, do the following:
 
 ## License
 **firmata4j** is distributed under the terms of the MIT License. See the
-[LICENSE](https://raw.github.com/kurbatov/firmata4j/master/LICENSE) file.
+[LICENSE](https://github.com/kurbatov/firmata4j/blob/master/LICENSE) file.
