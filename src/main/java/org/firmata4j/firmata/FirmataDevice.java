@@ -106,15 +106,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
     /**
-     * Constructs FirmataDevice based on {@link SerialPort}.
-     *
-     * @param port the port the device is connected to
-     */
-    public FirmataDevice(SerialPort port) {
-        this.port = port;
-    }
-
-    /**
      * Constructs FirmataDevice instance on specified port.
      * @param portName the port name the device is connected to
      */

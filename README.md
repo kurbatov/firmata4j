@@ -15,7 +15,7 @@ Add the following dependency to `pom.xml` of your project:
 
 ```xml
 <dependency>
-    <groupId>org.firmata4j</groupId>
+    <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
     <version>2.3.1</version>
 </dependency>
