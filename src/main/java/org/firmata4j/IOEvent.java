@@ -33,6 +33,8 @@ public class IOEvent {
 
     private final IODevice device;
     private final Pin pin;
+    private final long value;
+    private final long timestamp;
 
     /**
      * Constructs the event is relevant to {@link IODevice} as a whole.
@@ -42,6 +44,23 @@ public class IOEvent {
     public IOEvent(IODevice device) {
         this.device = device;
         this.pin = null;
+        this.value = 0;
+        this.timestamp = System.currentTimeMillis();
+    }
+    
+    /**
+     * Constructs the event is relevant to {@link IODevice} as a whole.
+     * <br/>
+     * This constructor allows setting the timestamp of event.
+     * 
+     * @param device the device that originated the event
+     * @param timestamp the timestamp of event
+     */
+    public IOEvent(IODevice device, long timestamp) {
+        this.device = device;
+        this.pin = null;
+        this.value = 0;
+        this.timestamp = timestamp;
     }
 
     /**
@@ -52,6 +71,23 @@ public class IOEvent {
     public IOEvent(Pin pin) {
         this.device = pin.getDevice();
         this.pin = pin;
+        this.value = pin.getValue();
+        this.timestamp = System.currentTimeMillis();
+    }
+    
+    /**
+     * Constructs the event is relevant to a particular {@link Pin}.
+     * <br/>
+     * This constructor allows setting the timestamp of event.
+     * 
+     * @param pin the pin that originated the event
+     * @param timestamp the timestamp of event
+     */
+    public IOEvent(Pin pin, long timestamp) {
+        this.device = pin.getDevice();
+        this.pin = pin;
+        this.value = pin.getValue();
+        this.timestamp = timestamp;
     }
 
     /**
@@ -72,6 +108,25 @@ public class IOEvent {
      */
     public Pin getPin() {
         return pin;
+    }
+
+    /**
+     * Returns the value the pin received.
+     * <br/>
+     * If the event is not about pin, always returns 0.
+     * 
+     * @return the value the pin received
+     */
+    public long getValue() {
+        return value;
+    }
+
+    /**
+     * Returns the timestamp of the event.
+     * @return timestamp of the event
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
 }

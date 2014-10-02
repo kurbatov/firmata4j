@@ -146,7 +146,7 @@ public class FirmataPin implements Pin {
         }
         if (currentValue != newValue) {
             device.sendMessage(message);
-            updateValue(value);
+            updateValue(value, System.currentTimeMillis());
         }
     }
 
@@ -195,10 +195,10 @@ public class FirmataPin implements Pin {
      *
      * @param value the new value
      */
-    synchronized void updateValue(long value) {
+    synchronized void updateValue(long value, long timestamp) {
         if (value != currentValue) {
             currentValue = value;
-            IOEvent evt = new IOEvent(this);
+            IOEvent evt = new IOEvent(this, timestamp);
             getDevice().pinChanged(evt); // the device listeners receive the event first
             for (PinEventListener listener : listeners) { // then pin listeners receive the event
                 listener.onValueChange(evt);

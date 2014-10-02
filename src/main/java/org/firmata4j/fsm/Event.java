@@ -24,7 +24,6 @@
 
 package org.firmata4j.fsm;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ import java.util.Map;
 public class Event {
 
     private String name;
-    private Date timestamp;
+    private long timestamp;
     private String type;
     private Map<String, Object> body;
 
@@ -45,7 +44,7 @@ public class Event {
      * Constructs the event of unspecified type and without a name.
      */
     public Event() {
-        timestamp = new Date();
+        timestamp = System.currentTimeMillis();
         body = new HashMap<String, Object>();
         type = "unspecified";
     }
@@ -85,7 +84,7 @@ public class Event {
     /**
      * Returns the timestamp of the event.
      */
-    public Date getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 

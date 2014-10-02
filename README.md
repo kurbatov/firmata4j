@@ -116,14 +116,14 @@ The first digit of versions must be equal because it stands for incompatible
 changes of the protocol.
 
 ## Uploading Firmata To Arduino
-Arduino IDE is shipped with an implementation of Firmata protocol so all you has
+Arduino IDE is shipped with an implementation of Firmata protocol so all one has
 to do is upload that firmware. You can do it as follows:
 
 - Plug your Arduino to the computer
 - Launch Arduino IDE
 - Select `File -> Examples -> Firmata -> StandardFirmata` in IDE's menu
 - Select your board in `Tools -> Board`
-- Select the port in `Tools -> Port` (it is already selected if you has uploaded something to your Arduino)
+- Select the port in `Tools -> Port` (it is already selected if you have uploaded something to your Arduino)
 - Click on `Upload` button
 
 Arduino IDE may contain an outdated version of Firmata.

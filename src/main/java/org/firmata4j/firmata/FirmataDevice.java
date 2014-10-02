@@ -59,6 +59,7 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
 public class FirmataDevice implements IODevice, SerialPortEventListener {
 
     private final FiniteStateMachine fsm = new FiniteStateMachine(WaitingForMessageState.class) {
+        private int counter;
         @Override
         public void onEvent(Event event) {
             LOGGER.debug("Event name: {}, type: {}, timestamp: {}", new Object[]{event.getName(), event.getType(), event.getTimestamp()});
@@ -90,7 +91,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                     break;
                 case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
                     // should never happen but who knows
-                    throw new IllegalStateException("Parser has reached the terminal state. It may be due to receiving of unsupported command.");
+                    throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
             }
         }
     };
@@ -206,12 +207,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         listeners.remove(listener);
     }
 
-    public void publishPinChanged(IOEvent event) {
-        for (IODeviceEventListener l : listeners) {
-            l.onPinChange(event);
-        }
-    }
-
     @Override
     public Set<Pin> getPins() {
         return new HashSet<Pin>(pins);
@@ -243,7 +238,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             try {
                 if (event.getEventValue() > 0) {
                     byte[] bytes = port.readBytes();
-                    LOGGER.debug("message has been received {}", bytes);
+                    LOGGER.trace("message has been received {}", bytes);
                     fsm.process(bytes);
                 }
             } catch (SerialPortException ex) {
@@ -374,7 +369,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             pin.initMode(Pin.Mode.values()[(Byte) event.getBodyItem(PIN_MODE)]);
             pin.initValue((Long) event.getBodyItem(PIN_VALUE));
         } else {
-            pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
+            pin.updateValue((Long) event.getBodyItem(PIN_VALUE), event.getTimestamp());
         }
         if (initializedPins.incrementAndGet() == pins.size()) {
             try {
@@ -419,7 +414,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             if (pinId < pins.size()) {
                 FirmataPin pin = pins.get(pinId);
                 if (Pin.Mode.ANALOG.equals(pin.getMode())) {
-                    pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
+                    pin.updateValue((Integer) event.getBodyItem(PIN_VALUE), event.getTimestamp());
                 }
             }
         }
@@ -435,7 +430,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         if (pinId < pins.size()) {
             FirmataPin pin = pins.get(pinId);
             if (Pin.Mode.INPUT.equals(pin.getMode())) {
-                pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
+                pin.updateValue((Integer) event.getBodyItem(PIN_VALUE), event.getTimestamp());
             }
         }
     }
