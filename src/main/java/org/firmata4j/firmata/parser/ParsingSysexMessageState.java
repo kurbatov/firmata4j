@@ -48,13 +48,13 @@ public class ParsingSysexMessageState extends AbstractState {
     private static final Map<Byte, Class<? extends State>> STATES;
 
     static {
-        STATES = new HashMap<Byte, Class<? extends State>>();
+        STATES = new HashMap<>();
         STATES.put(REPORT_FIRMWARE, ParsingFirmwareMessageState.class);
         STATES.put(EXTENDED_ANALOG, ParsingExtendedAnalogMessageState.class);
         STATES.put(CAPABILITY_RESPONSE, ParsingCapabilityResponseState.class);
         STATES.put(ANALOG_MAPPING_RESPONSE, ParsingAnalogMappingState.class);
         STATES.put(PIN_STATE_RESPONSE, PinStateParsingState.class);
-        //STATES.put(STRING_DATA, null); // TODO add parsing sysex string messages
+        STATES.put(STRING_DATA, ParsingStringMessageState.class);
         //STATES.put(I2C_REPLY, null); /// TODO add parsing I2C messages
     }
 

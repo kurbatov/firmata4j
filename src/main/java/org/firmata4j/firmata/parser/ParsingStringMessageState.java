@@ -22,45 +22,44 @@
  * THE SOFTWARE.
  */
 
-package org.firmata4j;
+package org.firmata4j.firmata.parser;
+
+import org.firmata4j.fsm.AbstractState;
+import org.firmata4j.fsm.Event;
+import org.firmata4j.fsm.FiniteStateMachine;
+import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
- * This interface describes an object that can receive and handle events from an
- * {@link IODevice}.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public interface IODeviceEventListener {
+public class ParsingStringMessageState extends AbstractState {
 
-    /**
-     * Invoked when an {@link IODevice} has been successfully started
-     * and initialized.
-     *
-     * @param event the event
-     */
-    public void onStart(IOEvent event);
+    public ParsingStringMessageState(FiniteStateMachine fsm) {
+        super(fsm);
+    }
 
-    /**
-     * Invoked when communication with {@link IODevice} has been 
-     * successfully terminated.
-     *
-     * @param event the event
-     */
-    public void onStop(IOEvent event);
-
-    /**
-     * Invoked when the state of one of device's pins has been changed.
-     * It can be change of mode or a value.
-     *
-     * @param event the event
-     */
-    public void onPinChange(IOEvent event);
+    @Override
+    public void process(byte b) {
+        if (b == END_SYSEX) {
+            byte[] buffer = getBuffer();
+            String value = decode(buffer, 0, buffer.length);
+            Event event = new Event(STRING_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            event.setBodyItem(STRING_MESSAGE, value);
+            transitTo(WaitingForMessageState.class);
+            publish(event);
+        } else {
+            bufferize(b);
+        }
+    }
     
-    /**
-     * Invoked when a string message has been received from the device.
-     * 
-     * @param message the message
-     */
-    public void onMessageReceive(IOEvent event, String message);
-
+    private String decode(byte[] buffer, int offset, int length) {
+        StringBuilder result = new StringBuilder();
+        length = length >>> 1; // divide by two
+        for (int i = 0; i < length; i++) {
+            result.append((char) (buffer[offset++] + (buffer[offset++] << 7)));
+        }
+        return result.toString();
+    }
+    
 }

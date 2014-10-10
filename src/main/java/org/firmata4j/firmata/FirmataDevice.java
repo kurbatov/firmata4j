@@ -409,6 +409,14 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
     }
     
+    private void onStringMessageReceive(Event event) {
+        String message = (String) event.getBodyItem(STRING_MESSAGE);
+        IOEvent evt = new IOEvent(this);
+        for (IODeviceEventListener listener : listeners) {
+            listener.onMessageReceive(evt, message);
+        }
+    }
+    
     private class FirmataParser extends FiniteStateMachine implements Runnable {
 
         private final BlockingQueue<byte[]> queue;
@@ -446,6 +454,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                     break;
                 case DIGITAL_MESSAGE_RESPONSE:
                     onDigitalMessageReceive(event);
+                    break;
+                case STRING_MESSAGE:
+                    onStringMessageReceive(event);
                     break;
                 case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
                     // should never happen but who knows

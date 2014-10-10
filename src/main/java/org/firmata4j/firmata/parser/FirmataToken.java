@@ -152,6 +152,8 @@ public interface FirmataToken {
     
     public static final String SYSTEM_RESET_MESSAGE = "systemReset";
     
+    public static final String STRING_MESSAGE = "stringMessage";
+    
     public static final String ERROR_MESSAGE = "error";
     public static final String ERROR_DESCRIPTION = "description";
     public static final String ERROR_CAUSE = "cause";

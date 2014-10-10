@@ -62,6 +62,11 @@ device.addEventListener(new IODeviceEventListener() {
                     pin.getValue())
             );
     }
+
+    @Override
+    public void onMessageReceive(IOEvent event, String message) {
+        System.out.println(message);
+    }
 });
 ```
 
