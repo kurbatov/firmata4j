@@ -35,18 +35,19 @@ import java.util.Map;
  */
 public class Event {
 
-    private String name;
-    private long timestamp;
-    private String type;
-    private Map<String, Object> body;
+    private final long timestamp;
+    private final String name;
+    private final String type;
+    private final Map<String, Object> body;
 
     /**
      * Constructs the event of unspecified type and without a name.
      */
     public Event() {
         timestamp = System.currentTimeMillis();
-        body = new HashMap<String, Object>();
+        name = "unspecified";
         type = "unspecified";
+        body = new HashMap<>();
     }
 
     /**
@@ -56,9 +57,23 @@ public class Event {
      * @param type the type of the event
      */
     public Event(String name, String type) {
-        this();
+        timestamp = System.currentTimeMillis();
         this.name = name;
         this.type = type;
+        body = new HashMap<>();
+    }
+    
+    /**
+     * Constructs the event of specified type with specified name.
+     *
+     * @param name the name of the event
+     * @param type the type of the event
+     */
+    public Event(String name, String type, long timestamp) {
+        this.timestamp = timestamp;
+        this.name = name;
+        this.type = type;
+        body = new HashMap<>();
     }
 
     /**
@@ -70,8 +85,10 @@ public class Event {
      * @param body the event's body
      */
     public Event(String name, String type, Map<String, Object> body) {
-        this(name, type);
-        this.body.putAll(body);
+        timestamp = System.currentTimeMillis();
+        this.name = name;
+        this.type = type;
+        this.body = new HashMap<>(body);
     }
 
     /**

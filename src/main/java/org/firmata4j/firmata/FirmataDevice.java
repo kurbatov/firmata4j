@@ -33,6 +33,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import jssc.SerialPort;
@@ -58,43 +60,9 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
  */
 public class FirmataDevice implements IODevice, SerialPortEventListener {
 
-    private final FiniteStateMachine fsm = new FiniteStateMachine(WaitingForMessageState.class) {
-        private int counter;
-        @Override
-        public void onEvent(Event event) {
-            LOGGER.debug("Event name: {}, type: {}, timestamp: {}", new Object[]{event.getName(), event.getType(), event.getTimestamp()});
-            for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
-                LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
-            }
-            LOGGER.debug("\n");
-            switch (event.getName()) {
-                case PROTOCOL_MESSAGE:
-                    onProtocolReceive(event);
-                    break;
-                case FIRMWARE_MESSAGE:
-                    onFirmwareReceive(event);
-                    break;
-                case PIN_CAPABILITIES_MESSAGE:
-                    onCapabilitiesReceive(event);
-                    break;
-                case PIN_STATE:
-                    onPinStateRecieve(event);
-                    break;
-                case ANALOG_MAPPING_MESSAGE:
-                    onAnalogMappingReceive(event);
-                    break;
-                case ANALOG_MESSAGE_RESPONSE:
-                    onAnalogMessageReceive(event);
-                    break;
-                case DIGITAL_MESSAGE_RESPONSE:
-                    onDigitalMessageReceive(event);
-                    break;
-                case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
-                    // should never happen but who knows
-                    throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
-            }
-        }
-    };
+    private final BlockingQueue<byte[]> byteQueue = new ArrayBlockingQueue<>(128);
+    private final FirmataParser parser = new FirmataParser(byteQueue);
+    private final Thread parserExecutor = new Thread(parser, "firmata-parser-thread");
     private final SerialPort port;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
@@ -117,6 +85,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     @Override
     public void start() throws IOException {
         if (!started.getAndSet(true)) {
+            parserExecutor.start();
             /* 
              The startup strategy is to open the port and immediately
              send the REPORT_FIRMWARE message.  When we receive the
@@ -166,9 +135,16 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     @Override
     public void stop() throws IOException {
         shutdown();
-        IOEvent event = new IOEvent(this);
-        for (IODeviceEventListener l : listeners) {
-            l.onStart(event);
+        parserExecutor.interrupt();
+        try {
+            parserExecutor.join();
+        } catch (InterruptedException ex) {
+            LOGGER.warn("Cannot stop parser thread", ex);
+        } finally {
+            IOEvent event = new IOEvent(this);
+            for (IODeviceEventListener l : listeners) {
+                l.onStart(event);
+            }
         }
     }
 
@@ -233,13 +209,11 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
 
     @Override
     public void serialEvent(SerialPortEvent event) {
-        //just hands data from input buffer to processing by FSM logic
-        if (event.isRXCHAR()) {
+        // queueing data from input buffer to processing by FSM logic
+        if (event.isRXCHAR() && event.getEventValue() > 0) {
             try {
-                if (event.getEventValue() > 0) {
-                    byte[] bytes = port.readBytes();
-                    LOGGER.trace("message has been received {}", bytes);
-                    fsm.process(bytes);
+                while (!byteQueue.offer(port.readBytes())) {
+                    // trying to place bytes to queue until it succeeds
                 }
             } catch (SerialPortException ex) {
                 LOGGER.error("Cannot read from device", ex);
@@ -369,7 +343,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             pin.initMode(Pin.Mode.values()[(Byte) event.getBodyItem(PIN_MODE)]);
             pin.initValue((Long) event.getBodyItem(PIN_VALUE));
         } else {
-            pin.updateValue((Long) event.getBodyItem(PIN_VALUE), event.getTimestamp());
+            pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
         }
         if (initializedPins.incrementAndGet() == pins.size()) {
             try {
@@ -414,7 +388,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             if (pinId < pins.size()) {
                 FirmataPin pin = pins.get(pinId);
                 if (Pin.Mode.ANALOG.equals(pin.getMode())) {
-                    pin.updateValue((Integer) event.getBodyItem(PIN_VALUE), event.getTimestamp());
+                    pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
                 }
             }
         }
@@ -430,8 +404,67 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         if (pinId < pins.size()) {
             FirmataPin pin = pins.get(pinId);
             if (Pin.Mode.INPUT.equals(pin.getMode())) {
-                pin.updateValue((Integer) event.getBodyItem(PIN_VALUE), event.getTimestamp());
+                pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
             }
         }
     }
+    
+    private class FirmataParser extends FiniteStateMachine implements Runnable {
+
+        private final BlockingQueue<byte[]> queue;
+
+        public FirmataParser(BlockingQueue<byte[]> queue) {
+            super(WaitingForMessageState.class);
+            this.queue = queue;
+        }
+        
+        @Override
+        public void onEvent(Event event) {
+            LOGGER.debug("Event name: {}, type: {}, timestamp: {}", new Object[]{event.getName(), event.getType(), event.getTimestamp()});
+            for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
+                LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
+            }
+            LOGGER.debug("\n");
+            switch (event.getName()) {
+                case PROTOCOL_MESSAGE:
+                    onProtocolReceive(event);
+                    break;
+                case FIRMWARE_MESSAGE:
+                    onFirmwareReceive(event);
+                    break;
+                case PIN_CAPABILITIES_MESSAGE:
+                    onCapabilitiesReceive(event);
+                    break;
+                case PIN_STATE:
+                    onPinStateRecieve(event);
+                    break;
+                case ANALOG_MAPPING_MESSAGE:
+                    onAnalogMappingReceive(event);
+                    break;
+                case ANALOG_MESSAGE_RESPONSE:
+                    onAnalogMessageReceive(event);
+                    break;
+                case DIGITAL_MESSAGE_RESPONSE:
+                    onDigitalMessageReceive(event);
+                    break;
+                case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
+                    // should never happen but who knows
+                    throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
+            }
+        }
+
+        @Override
+        public void run() {
+            while(!Thread.interrupted()) {
+                try {
+                    process(queue.take());
+                } catch (InterruptedException ex) {
+                    LOGGER.info("FirmataParser has stopped");
+                    return;
+                }
+            }
+        }
+        
+    }
+    
 }
