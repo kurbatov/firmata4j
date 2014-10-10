@@ -125,4 +125,12 @@ public interface IODevice {
      * @return the name of a protocol
      */
     public String getProtocol();
+    
+    /**
+     * Sends arbitrary message to device.
+     * 
+     * @param message the message
+     * @throws IOException when sending a message fails
+     */
+    public void sendMessage(String message) throws IOException;
 }

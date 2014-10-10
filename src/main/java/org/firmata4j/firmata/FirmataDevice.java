@@ -208,6 +208,14 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     @Override
+    public void sendMessage(String message) throws IOException {
+        if (message.length() > 15) {
+            LOGGER.warn("Firmata 2.3.6 implementation has input buffer only 32 bytes so you can safely send only 15 characters log messages"); 
+        }
+        sendMessage(FirmataMessageFactory.stringMessage(message));
+    }
+
+    @Override
     public void serialEvent(SerialPortEvent event) {
         // queueing data from input buffer to processing by FSM logic
         if (event.isRXCHAR() && event.getEventValue() > 0) {

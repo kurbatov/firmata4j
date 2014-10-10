@@ -188,4 +188,24 @@ public class FirmataMessageFactory {
             (byte) ((maxPulse >>> 7) & 0x7F)
         };
     }
+    
+    /**
+     * Encodes the string as a SysEx message.
+     * 
+     * @param message string message
+     * @return SysEx message
+     */
+    public static byte[] stringMessage(String message) {
+        byte[] bytes = message.getBytes();
+        byte[] result = new byte[bytes.length * 2 + 3];
+        result[0] = START_SYSEX;
+        result[1] = STRING_DATA;
+        result[result.length - 1] = END_SYSEX;
+        for (int i = 0; i < bytes.length; i++) {
+            byte b = bytes[i];
+            result[i * 2 + 2] = (byte) (b & 0x7F);
+            result[i * 2 + 3] = (byte) ((b >> 7) & 0x7F);
+        }
+        return result;
+    }
 }
