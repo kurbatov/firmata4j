@@ -7,7 +7,7 @@ board) which runs Firmata protocol from your java program.
 - Interaction with a board and its pins in object-oriented style
 - Abstraction over details of the protocol
 - Provides an UI component that visualize the current state of every pin and
-allows to change a mode and state of each of those
+allows changing a mode and state of each of those
 
 ## Installation
 
@@ -32,9 +32,10 @@ device.ensureInitializationIsDone(); // wait for initialization is done
 device.stop(); // stop communication to the device
 ```
 
-The "actual work" should be done in asynchronous style because message exchange
-takes more time than execution of a line of code. For doing so we have to
-subscribe listeners on events of the device or its pins.
+The "actual work" consists in sending commands to the board and processing
+events that occur on it.
+
+To react to events we have to subscribe listeners of the device or its pins.
 
 ```java
 device.addEventListener(new IODeviceEventListener() {
@@ -65,13 +66,14 @@ device.addEventListener(new IODeviceEventListener() {
 
     @Override
     public void onMessageReceive(IOEvent event, String message) {
+        // here we react to receiving a text message from the device
         System.out.println(message);
     }
 });
 ```
 
-To obtain more fine grained control over a situation we can subscribe to events
-of a particular pin.
+To obtain more fine grained control we can subscribe to events of a particular
+pin.
 
 ```java
 Pin pin = device.getPin(2);
@@ -88,7 +90,7 @@ pin.addEventListener(new PinEventListener() {
 });
 ```
 
-Changing the mode and value of a pin looks like this:
+Changing the mode and value of a pin look like this:
 
 ```java
 pin.setMode(Pin.Mode.OUTPUT); // our listeners will get event about this change
@@ -105,8 +107,8 @@ frame.pack();
 frame.setVisible(true);
 ```
 
-`JPinboard` allows to set the pin's mode by choosing one from a context menu of
-the pin. State of the output pin can be changed by double click on it.
+`JPinboard` allows setting the pin's mode by choosing one from a context menu of
+the pin. State of the output pin can be changed by double clicking on it.
 
 An example of `JPinboard` usage can be found in
 [`org.firmata4j.Example` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
@@ -117,12 +119,12 @@ of **firmata4j** is 2.3.1.
 
 **firmata4j**-2.3.x will work well with Fimata v. 2.3.x. Actually it should work
 with Firmata v. 2.x.x but not necessarily support all of the protocol features.
-The first digit of versions must be equal because it stands for incompatible
+The first digits of versions must be equal because those stand for incompatible
 changes of the protocol.
 
 ## Uploading Firmata To Arduino
-Arduino IDE is shipped with an implementation of Firmata protocol so all one has
-to do is upload that firmware. You can do it as follows:
+Arduino IDE is shipped with an implementation of Firmata protocol. You can
+upload it as follows:
 
 - Plug your Arduino to the computer
 - Launch Arduino IDE
@@ -132,7 +134,7 @@ to do is upload that firmware. You can do it as follows:
 - Click on `Upload` button
 
 Arduino IDE may contain an outdated version of Firmata.
-You can upload the freshest one using the guide on
+You can update it using the guide on
 [this page](https://github.com/firmata/arduino).
 
 ## I2C
