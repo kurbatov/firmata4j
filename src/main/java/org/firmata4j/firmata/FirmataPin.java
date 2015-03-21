@@ -138,7 +138,7 @@ public class FirmataPin implements Pin {
             }
             message = FirmataMessageFactory.setDigitalPinValue(portId, portValue);
             newValue = val ? 1 : 0;
-        } else if (currentMode == Mode.ANALOG || currentMode == Mode.PWM) {
+        } else if (currentMode == Mode.ANALOG || currentMode == Mode.PWM || currentMode == Mode.SERVO) {
             message = FirmataMessageFactory.setAnalogPinValue(pinId, value);
             newValue = value;
         } else {
