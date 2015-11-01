@@ -25,6 +25,7 @@
 package org.firmata4j.firmata;
 
 import org.firmata4j.Pin;
+
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -48,6 +49,100 @@ public class FirmataMessageFactory {
      * used with Firmata's pin mode message) correspond to the analog channels.
      */
     public static final byte[] ANALOG_MAPPING_REQUEST = new byte[]{START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX};
+
+    /* I2C SUPPORT */
+    public static byte[] i2CConfigRequest(int delayInMicroseconds) {
+
+        byte delayLsb = (byte) (delayInMicroseconds & 0x7F);
+        byte delayMsb = 0;
+        if(delayInMicroseconds > 128){
+            delayMsb = 1;
+        }
+        return new byte[]{START_SYSEX, I2C_CONFIG, delayLsb, delayMsb, END_SYSEX};
+    }
+
+    /**
+     * Structure of an i2C
+     *
+     * @param slaveAddress
+     * @param bytesToWrite
+     * @return
+     */
+    public static byte[] i2CWriteRequest(final byte slaveAddress,byte[] bytesToWrite){
+        byte[] result = new byte[bytesToWrite.length*2+5];
+        result[0] = START_SYSEX;
+        result[1] = I2C_REQUEST;
+        result[2] = slaveAddress;
+        result[3] = I2C_WRITE; // Write Request
+        for(int x=0;x<bytesToWrite.length;x++){
+            int skipIndex = x * 2;
+            result[4+skipIndex] = (byte) (bytesToWrite[x] & 0x7F);
+            result[5+skipIndex] = (byte) (((bytesToWrite[x]&0xFF) >>> 7) & 0x7F);
+        }
+        result[4+bytesToWrite.length*2] = END_SYSEX;
+        return result;
+    }
+
+
+    /**
+     * Structure of an i2c read request. Does not support 10 bit mode.
+     *
+     * 0 - SYSEX START
+     * 1 - SYSEX COMMAND - 0x76 I2C REQUEST  - ARGV0
+     * 2 - I2C MODE - 0x10 Start, 0X18 Stop Continuous Read, 0x08 Single Read - ARGV1
+     * 3 - Slave Register LSB - ARGV2
+     * 4 - Slave Register MSB - ARGV3
+     *
+     * @param slaveAddress The 8 bit address of the i2c device you want to talk to.
+     * @param slaveRegister The slave register will act as a tag on your returned data enabling you to identify the
+     *                      matching returned message to the request.
+     * @param bytesToRead the number of bytes that the device will return
+     * @param continuous repeatedly send updates until asked to stop
+     * @return
+     */
+
+    public static byte[] i2CReadRequest(final byte slaveAddress,final byte slaveRegister, int bytesToRead, boolean continuous){
+        if(continuous){
+            if(slaveRegister==0) {
+                return new byte[]{
+                        START_SYSEX, I2C_REQUEST,
+                        slaveAddress, I2C_READ_CONTINUOUS,
+                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                        END_SYSEX
+                };
+            } else {
+                return new byte[]{
+                        START_SYSEX, I2C_REQUEST,
+                        slaveAddress, I2C_READ_CONTINUOUS,
+                        (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
+                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                        END_SYSEX
+                };
+            }
+        } else {
+            if(slaveRegister==0) {
+                return new byte[]{START_SYSEX, I2C_REQUEST,
+                        slaveAddress, I2C_READ,
+                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                        END_SYSEX
+                };
+            } else {
+                return new byte[]{START_SYSEX, I2C_REQUEST,
+                        slaveAddress, I2C_READ,
+                        (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
+                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                        END_SYSEX
+                };
+
+            }
+        }
+    }
+
+    public static byte[] i2CStopContinuousRequest(final byte slaveAddress){
+        return new byte[]{START_SYSEX, I2C_REQUEST, slaveAddress, I2C_STOP_READ_CONTINUOUS, END_SYSEX};
+    }
+
+    /* I2C SUPPORT ENDS */
 
     /**
      * Builds a message that requests a state of specified pin.

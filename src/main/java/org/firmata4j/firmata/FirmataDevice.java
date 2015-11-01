@@ -24,19 +24,6 @@
 
 package org.firmata4j.firmata;
 
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
@@ -50,6 +37,20 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
@@ -275,6 +276,54 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     /**
+     * Initializes the I2C Pins before the I2C interface can be used.
+     * @throws IOException
+     */
+    public void initI2C() throws IOException {
+        this.initI2C(0);
+    }
+
+    /**
+     * The I2C Pins must be initialized before the I2C interface can be used
+     * @param delayInMicroseconds amount of time in microseconds that the device will wait
+     *                            before sending a reply to a read request. Start a zero and adjust it if
+     *                            there are problems reading the response;
+     */
+    Integer i2cDelay;
+    public void initI2C(int delayInMicroseconds) throws IOException {
+        if(delayInMicroseconds > 255){
+            throw new IllegalArgumentException("delayInMicroseconds cannot be greater then 255 microseconds.");
+        }
+        this.i2cDelay = delayInMicroseconds;
+        sendMessage(FirmataMessageFactory.i2CConfigRequest(delayInMicroseconds));
+
+    }
+
+
+    public void requestI2CData( byte slaveAddress, byte slaveRegister, byte byteCount, boolean continuous ) throws IOException {
+        if(this.i2cDelay == null){
+            throw new IllegalArgumentException("Initalize i2c with initI2C() before calling this method.");
+        }
+
+        try {
+            sendMessage(FirmataMessageFactory.i2CReadRequest(slaveAddress, slaveRegister, byteCount, continuous));
+        } catch (IOException e) {
+            throw new IOException("Cannot request i2c data from device.", e);
+        }
+    }
+
+    public void writeI2CData( byte slaveAddress,  byte[] data ) throws IOException {
+        if(this.i2cDelay == null){
+            throw new IllegalArgumentException("Initialize i2c with initI2C() before calling this method.");
+        }
+        try {
+            sendMessage(FirmataMessageFactory.i2CWriteRequest(slaveAddress, data));
+        } catch (IOException e) {
+            throw new IOException("Cannot write i2c data to device.", e);
+        }
+    }
+
+    /**
      * Describes reaction to protocol receiving.
      *
      * @param event the event of receiving protocol version
@@ -416,7 +465,33 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             }
         }
     }
-    
+
+    private void onI2cMessageReceive(Event event) {
+        LOGGER.info("Recevied I2C Response " + event);
+        byte[] messageDouble = (byte[]) event.getBodyItem(I2C_MESSAGE);
+        byte[] message = convertI2CBuffer(messageDouble);
+        byte[] values = new byte[message.length-2];
+        System.arraycopy(message, 2, values, 0, message.length-2);
+        byte slaveAddress = message[0];
+        byte register = message[1];
+        IOEvent evt = new IOEvent(this,true);// An I2C Event
+        for (IODeviceEventListener listener : listeners) {
+            listener.onI2cMessageReceive(evt,slaveAddress,register,values);
+        }
+
+    }
+
+    private byte[] convertI2CBuffer(byte[] byteBuffer){
+        int outSize = new Double(Math.floor(byteBuffer.length / 2)).intValue();
+        byte[] outBuffer = new byte[outSize];
+        int outIndex = 0;
+        for(int index=0;index < byteBuffer.length;index=index+2){
+            outBuffer[outIndex] = (byte)(((byteBuffer[index+1] << 7) & 0x80) | (byteBuffer[index] & 0x7F));
+            outIndex++;
+        }
+        return outBuffer;
+    }
+
     private void onStringMessageReceive(Event event) {
         String message = (String) event.getBodyItem(STRING_MESSAGE);
         IOEvent evt = new IOEvent(this);
@@ -465,6 +540,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                     break;
                 case STRING_MESSAGE:
                     onStringMessageReceive(event);
+                    break;
+                case I2C_MESSAGE:
+                    onI2cMessageReceive(event);
                     break;
                 case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
                     // should never happen but who knows
