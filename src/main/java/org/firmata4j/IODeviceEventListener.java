@@ -57,6 +57,13 @@ public interface IODeviceEventListener {
     public void onPinChange(IOEvent event);
     
     /**
+     * Invoked when an I2C message has been received from the device.
+     *
+     * @param message the message
+     */
+    public void onI2cMessageReceive(IOEvent event, byte slaveAddress, byte register, byte[] message);
+
+    /**
      * Invoked when a string message has been received from the device.
      * 
      * @param message the message

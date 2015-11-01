@@ -133,4 +133,13 @@ public interface IODevice {
      * @throws IOException when sending a message fails
      */
     public void sendMessage(String message) throws IOException;
+
+    public void initI2C() throws IOException;
+
+    public void initI2C(int delayInMicroseconds) throws IOException;
+
+    public void writeI2CData(byte slaveAddress, byte[] data) throws IOException;
+
+    public void requestI2CData(byte slaveAddress, byte slaveRegister, byte byteCount, boolean continuous) throws IOException;
+
 }

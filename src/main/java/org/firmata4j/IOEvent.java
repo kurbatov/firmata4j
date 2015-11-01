@@ -35,6 +35,7 @@ public class IOEvent {
     private final Pin pin;
     private final long value;
     private final long timestamp;
+    private final boolean i2cEvent;
 
     /**
      * Constructs the event is relevant to {@link IODevice} as a whole.
@@ -46,8 +47,22 @@ public class IOEvent {
         this.pin = null;
         this.value = 0;
         this.timestamp = System.currentTimeMillis();
+        this.i2cEvent = false;
     }
     
+    /**
+     * Constructs the event is relevant to {@link IODevice} as a whole.
+     *
+     * @param device the device that originated the event
+     */
+    public IOEvent(IODevice device,boolean isI2CEvent) {
+        this.device = device;
+        this.pin = null;
+        this.value = 0;
+        this.timestamp = System.currentTimeMillis();
+        this.i2cEvent = isI2CEvent;
+    }
+
     /**
      * Constructs the event is relevant to {@link IODevice} as a whole.
      * <br/>
@@ -61,6 +76,7 @@ public class IOEvent {
         this.pin = null;
         this.value = 0;
         this.timestamp = timestamp;
+        this.i2cEvent = false;
     }
 
     /**
@@ -73,6 +89,7 @@ public class IOEvent {
         this.pin = pin;
         this.value = pin.getValue();
         this.timestamp = System.currentTimeMillis();
+        this.i2cEvent = false;
     }
     
     /**
@@ -88,6 +105,7 @@ public class IOEvent {
         this.pin = pin;
         this.value = pin.getValue();
         this.timestamp = timestamp;
+        this.i2cEvent = false;
     }
 
     /**
@@ -129,4 +147,7 @@ public class IOEvent {
         return timestamp;
     }
 
+    public boolean isI2cEvent() {
+        return i2cEvent;
+    }
 }
