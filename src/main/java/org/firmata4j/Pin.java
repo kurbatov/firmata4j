@@ -67,7 +67,28 @@ public interface Pin {
         /**
          * Pin included in I2C setup
          */
-        I2C
+        I2C,
+        /**
+         * Pin configured for 1-wire
+         */
+        ONEWIRE,
+        /**
+         * Pin configured for stepper motor
+         */
+        STEPPER,
+        /**
+         * Pin configured for rotary encoders
+         */
+        ENCODER,
+        /**
+         * Pin configured for serial communication
+         */
+        SERIAL,
+        /**
+         * Enable internal pull-up resistor for pin
+         */
+        PULLUP,
+        // TODO: #define PIN_MODE_IGNORE         0x7F // pin configured to be ignored by digitalWrite and capabilityResponse
     }
 
     /**
