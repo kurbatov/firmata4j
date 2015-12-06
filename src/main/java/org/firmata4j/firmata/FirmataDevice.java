@@ -460,7 +460,8 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         int pinId = (Integer) event.getBodyItem(PIN_ID);
         if (pinId < pins.size()) {
             FirmataPin pin = pins.get(pinId);
-            if (Pin.Mode.INPUT.equals(pin.getMode())) {
+            if (Pin.Mode.INPUT.equals(pin.getMode()) ||
+            		Pin.Mode.PULLUP.equals(pin.getMode())) {
                 pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
             }
         }
