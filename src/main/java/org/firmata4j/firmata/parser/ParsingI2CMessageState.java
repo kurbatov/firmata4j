@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package org.firmata4j.firmata.parser;
 
 import org.firmata4j.fsm.AbstractState;
@@ -31,18 +30,16 @@ import org.firmata4j.fsm.FiniteStateMachine;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
- * This class parses inbound I2C messages and publishes them when they are complete.
- * @author William Reichardt;
+ * This class parses inbound I2C messages and publishes them when they are
+ * complete.
+ *
+ * @author William Reichardt
  */
 public class ParsingI2CMessageState extends AbstractState {
-
-    private int portId, counter, value;
 
     public ParsingI2CMessageState(FiniteStateMachine fsm) {
         super(fsm);
     }
-
-    // Called once for each byte in the message
 
     /*
      * /* I2C reply
@@ -53,20 +50,39 @@ public class ParsingI2CMessageState extends AbstractState {
      * ... Lotsa Bytes
      * n  END_SYSEX (0xF7)
      */
-
-    /** @param b the input byte
+    /**
+     * Collects I2C message from individual bytes.
+     *
+     * @param b the input byte
      */
     @Override
     public void process(byte b) {
         if (b == END_SYSEX) {
-            byte[] buffer = getBuffer();
+            byte[] buffer = convertI2CBuffer(getBuffer());
+            byte address = buffer[0];
+            byte register = buffer[1];
+            byte[] message = new byte[buffer.length-2];
+            System.arraycopy(buffer, 2, message, 0, buffer.length-2);
             Event event = new Event(I2C_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
-            event.setBodyItem(I2C_MESSAGE, buffer);
+            event.setBodyItem(I2C_ADDRESS, address);
+            event.setBodyItem(I2C_REGISTER, register);
+            event.setBodyItem(I2C_MESSAGE, message);
             transitTo(WaitingForMessageState.class);
             publish(event);
         } else {
             bufferize(b);
         }
+    }
+
+    private static byte[] convertI2CBuffer(byte[] byteBuffer) {
+        int outSize = new Double(Math.floor(byteBuffer.length / 2)).intValue();
+        byte[] outBuffer = new byte[outSize];
+        int outIndex = 0;
+        for (int index = 0; index < byteBuffer.length; index = index + 2) {
+            outBuffer[outIndex] = (byte) (((byteBuffer[index + 1] << 7) & 0x80) | (byteBuffer[index] & 0x7F));
+            outIndex++;
+        }
+        return outBuffer;
     }
 
 }

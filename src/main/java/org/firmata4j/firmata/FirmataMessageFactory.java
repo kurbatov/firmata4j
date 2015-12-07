@@ -39,106 +39,115 @@ public class FirmataMessageFactory {
     /**
      * This message requests firmware version of a Firmata device.
      */
-    public static final byte[] REQUEST_FIRMWARE = new byte[]{START_SYSEX, REPORT_FIRMWARE, END_SYSEX};
+    public static final byte[] REQUEST_FIRMWARE = {START_SYSEX, REPORT_FIRMWARE, END_SYSEX};
     /**
      * This message requests capability repot of a Firmata device.
      */
-    public static final byte[] REQUEST_CAPABILITY = new byte[]{START_SYSEX, CAPABILITY_QUERY, END_SYSEX};
+    public static final byte[] REQUEST_CAPABILITY = {START_SYSEX, CAPABILITY_QUERY, END_SYSEX};
     /**
      * The analog mapping query provides the information about which pins (as
      * used with Firmata's pin mode message) correspond to the analog channels.
      */
-    public static final byte[] ANALOG_MAPPING_REQUEST = new byte[]{START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX};
+    public static final byte[] ANALOG_MAPPING_REQUEST = {START_SYSEX, ANALOG_MAPPING_QUERY, END_SYSEX};
 
     /* I2C SUPPORT */
-    public static byte[] i2CConfigRequest(int delayInMicroseconds) {
-
+    /**
+     * Creates SysEx message that configures I2C setup.
+     *
+     * @param delayInMicroseconds delay between the moment a register is written
+     * to and the moment when the data can be read from that register (optional,
+     * when I2C device requires a delay)
+     * @return message that configures I2C
+     */
+    public static byte[] i2cConfigRequest(int delayInMicroseconds) {
+        if (delayInMicroseconds < 0) {
+            throw new IllegalArgumentException("Delay cannot be less than 0 microseconds.");
+        }
+        if (delayInMicroseconds > 255) {
+            throw new IllegalArgumentException("Delay cannot be greater than 255 microseconds.");
+        }
         byte delayLsb = (byte) (delayInMicroseconds & 0x7F);
         byte delayMsb = 0;
-        if(delayInMicroseconds > 128){
+        if (delayInMicroseconds > 128) {
             delayMsb = 1;
         }
         return new byte[]{START_SYSEX, I2C_CONFIG, delayLsb, delayMsb, END_SYSEX};
     }
 
     /**
-     * Structure of an i2C
+     * Builds a message that asks a Firmata device to send specified data to
+     * specified I2C device. <b>Does not support 10-bit mode.</b>
      *
-     * @param slaveAddress
-     * @param bytesToWrite
-     * @return
+     * @param slaveAddress address of the I2C device you want to talk to
+     * @param bytesToWrite data to send to the slaveAdderss
+     * @return the message
      */
-    public static byte[] i2CWriteRequest(final byte slaveAddress,byte[] bytesToWrite){
-        byte[] result = new byte[bytesToWrite.length*2+5];
+    public static byte[] i2cWriteRequest(byte slaveAddress, byte[] bytesToWrite) {
+        byte[] result = new byte[bytesToWrite.length * 2 + 5];
         result[0] = START_SYSEX;
         result[1] = I2C_REQUEST;
         result[2] = slaveAddress;
-        result[3] = I2C_WRITE; // Write Request
-        for(int x=0;x<bytesToWrite.length;x++){
-            int skipIndex = x * 2;
-            result[4+skipIndex] = (byte) (bytesToWrite[x] & 0x7F);
-            result[5+skipIndex] = (byte) (((bytesToWrite[x]&0xFF) >>> 7) & 0x7F);
+        result[3] = I2C_WRITE;
+        //TODO replace I2C_WRITE with generated slave address (MSB) to support 10-bit mode
+        // see https://github.com/firmata/protocol/blob/master/i2c.md
+        for (int x = 0; x < bytesToWrite.length; x++) {
+            int skipIndex = x * 2 + 4;
+            result[skipIndex] = (byte) (bytesToWrite[x] & 0x7F);
+            result[skipIndex + 1] = (byte) (((bytesToWrite[x] & 0xFF) >>> 7) & 0x7F);
         }
-        result[4+bytesToWrite.length*2] = END_SYSEX;
+        result[result.length - 1] = END_SYSEX;
         return result;
     }
 
-
     /**
-     * Structure of an i2c read request. Does not support 10 bit mode.
+     * Builds a message that asks a Firmata device to read data from an I2C
+     * device. <b>Does not support 10-bit mode.</b>
      *
-     * 0 - SYSEX START
-     * 1 - SYSEX COMMAND - 0x76 I2C REQUEST  - ARGV0
-     * 2 - I2C MODE - 0x10 Start, 0X18 Stop Continuous Read, 0x08 Single Read - ARGV1
-     * 3 - Slave Register LSB - ARGV2
-     * 4 - Slave Register MSB - ARGV3
-     *
-     * @param slaveAddress The 8 bit address of the i2c device you want to talk to.
-     * @param slaveRegister The slave register will act as a tag on your returned data enabling you to identify the
-     *                      matching returned message to the request.
+     * @param slaveAddress address of the I2C device you want to talk to
+     * @param slaveRegister The slave register will act as a tag on your
+     * returned data enabling you to identify the matching returned message to
+     * the request.
      * @param bytesToRead the number of bytes that the device will return
      * @param continuous repeatedly send updates until asked to stop
-     * @return
+     * @return the message
      */
-
-    public static byte[] i2CReadRequest(final byte slaveAddress,final byte slaveRegister, int bytesToRead, boolean continuous){
-        if(continuous){
-            if(slaveRegister==0) {
-                return new byte[]{
-                        START_SYSEX, I2C_REQUEST,
-                        slaveAddress, I2C_READ_CONTINUOUS,
-                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
-                        END_SYSEX
-                };
-            } else {
-                return new byte[]{
-                        START_SYSEX, I2C_REQUEST,
-                        slaveAddress, I2C_READ_CONTINUOUS,
-                        (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
-                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
-                        END_SYSEX
-                };
-            }
+    public static byte[] i2cReadRequest(byte slaveAddress, byte slaveRegister, int bytesToRead, boolean continuous) {
+        byte command;
+        byte[] message;
+        if (continuous) {
+            command = I2C_READ_CONTINUOUS;
         } else {
-            if(slaveRegister==0) {
-                return new byte[]{START_SYSEX, I2C_REQUEST,
-                        slaveAddress, I2C_READ,
-                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
-                        END_SYSEX
-                };
-            } else {
-                return new byte[]{START_SYSEX, I2C_REQUEST,
-                        slaveAddress, I2C_READ,
-                        (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
-                        (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
-                        END_SYSEX
-                };
-
-            }
+            command = I2C_READ;
         }
+        //TODO replace hardcoded slave address (MSB) with generated one to support 10-bit mode
+        // see https://github.com/firmata/protocol/blob/master/i2c.md
+        if (slaveRegister == 0) {
+            message = new byte[]{
+                START_SYSEX, I2C_REQUEST,
+                slaveAddress, command,
+                (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                END_SYSEX
+            };
+        } else {
+            message = new byte[]{
+                START_SYSEX, I2C_REQUEST,
+                slaveAddress, command,
+                (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
+                (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
+                END_SYSEX
+            };
+        }
+        return message;
     }
 
-    public static byte[] i2CStopContinuousRequest(final byte slaveAddress){
+    /**
+     * Builds a message that terminates receiving continuous updates from
+     * specified I2C device.
+     *
+     * @param slaveAddress address of the I2C device you want to shut up
+     * @return the message
+     */
+    public static byte[] i2cStopContinuousRequest(byte slaveAddress) {
         return new byte[]{START_SYSEX, I2C_REQUEST, slaveAddress, I2C_STOP_READ_CONTINUOUS, END_SYSEX};
     }
 
@@ -198,13 +207,16 @@ public class FirmataMessageFactory {
      * @return message that assigns particular mode to specified pin
      */
     public static byte[] setMode(byte pinId, Pin.Mode mode) {
+        if (mode == Pin.Mode.UNSUPPORTED) {
+            throw new IllegalArgumentException("Cannot set unsupported mode to pin " + pinId);
+        }
         return new byte[]{SET_PIN_MODE, pinId, (byte) mode.ordinal()};
     }
 
     /**
      * Creates Firmata message to set digital values of port's pins.<br/>
-     * Digital value should be assigned to set of pins at once. A set of pins is
-     * called port.<br/>
+     * Digital value should be assigned to a set of pins at once. A set of pins
+     * is called port.<br/>
      * A port contains 8 pins. Digital value of every pin in a set transfers in
      * one byte. Every bit in the byte represents state of pin's output.
      *
@@ -283,10 +295,10 @@ public class FirmataMessageFactory {
             (byte) ((maxPulse >>> 7) & 0x7F)
         };
     }
-    
+
     /**
      * Encodes the string as a SysEx message.
-     * 
+     *
      * @param message string message
      * @return SysEx message
      */
