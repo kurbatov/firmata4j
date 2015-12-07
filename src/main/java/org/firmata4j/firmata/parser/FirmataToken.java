@@ -71,6 +71,11 @@ public interface FirmataToken {
     public static final byte SET_PIN_MODE            = (byte) 0xF4;
     
     /**
+     * set value of an individual digital pin
+     */
+    public static final byte SET_DIGITAL_PIN_VALUE   = (byte) 0xF5;
+    
+    /**
      * report protocol version
      */
     public static final byte REPORT_VERSION          = (byte) 0xF9;
@@ -93,8 +98,12 @@ public interface FirmataToken {
     // extended command set using sysex (0-127/0x00-0x7F)
     /* 0x00-0x0F reserved for user-defined commands */
     public static final byte RESERVED_COMMAND        = 0x00; // 2nd SysEx data byte is a chip-specific command (AVR, PIC, TI, etc).
+    public static final byte SERIAL_MESSAGE          = 0x60; // communicate with serial devices, including other boards
+    public static final byte ENCODER_DATA            = 0x61; // reply with encoders current positions
     public static final byte SERVO_CONFIG            = 0x70; // set max angle, minPulse, maxPulse, freq
     public static final byte STRING_DATA             = 0x71; // a string message with 14-bits per byte
+    public static final byte STEPPER_DATA            = 0x72; // control a stepper motor
+    public static final byte ONEWIRE_DATA            = 0x73; // send an OneWire read/write/reset/select/skip/search request
     public static final byte SHIFT_DATA              = 0x75; // a bitstream to/from a shift register
     public static final byte I2C_REQUEST             = 0x76; // send an I2C read/write request
     public static final byte LCD_REQUEST             = 0x62;
@@ -109,18 +118,25 @@ public interface FirmataToken {
     public static final byte ANALOG_MAPPING_RESPONSE = 0x6A; // reply with mapping info
     public static final byte REPORT_FIRMWARE         = 0x79; // report name and version of the firmware
     public static final byte SAMPLING_INTERVAL       = 0x7A; // set the poll rate of the main loop
+    public static final byte SCHEDULER_DATA          = 0x7B; // send a createtask/deletetask/addtotask/schedule/querytasks/querytask request to the scheduler
     public static final byte SYSEX_NON_REALTIME      = 0x7E; // MIDI Reserved for non-realtime messages
     public static final byte SYSEX_REALTIME          = 0x7F; // MIDI Reserved for realtime messages
 
     // pin modes
-    public static final byte INPUT                   = 0x00; // defined in wiring.h
-    public static final byte OUTPUT                  = 0x01; // defined in wiring.h
-    public static final byte ANALOG                  = 0x02; // analog pin in analogInput mode
-    public static final byte PWM                     = 0x03; // digital pin in PWM output mode
-    public static final byte SERVO                   = 0x04; // digital pin in Servo output mode
-    public static final byte SHIFT                   = 0x05; // shiftIn/shiftOut mode
-    public static final byte I2C                     = 0x06; // pin included in I2C setup
-    public static final byte TOTAL_PIN_MODES         = 7;
+    public static final byte PIN_MODE_INPUT          = 0x00; // defined in wiring.h
+    public static final byte PIN_MODE_OUTPUT         = 0x01; // defined in wiring.h
+    public static final byte PIN_MODE_ANALOG         = 0x02; // analog pin in analogInput mode
+    public static final byte PIN_MODE_PWM            = 0x03; // digital pin in PWM output mode
+    public static final byte PIN_MODE_SERVO          = 0x04; // digital pin in Servo output mode
+    public static final byte PIN_MODE_SHIFT          = 0x05; // shiftIn/shiftOut mode
+    public static final byte PIN_MODE_I2C            = 0x06; // pin included in I2C setup
+    public static final byte PIN_MODE_ONEWIRE        = 0x07; // pin configured for 1-wire
+    public static final byte PIN_MODE_STEPPER        = 0x08; // pin configured for stepper motor
+    public static final byte PIN_MODE_ENCODER        = 0x09; // pin configured for rotary encoders
+    public static final byte PIN_MODE_SERIAL         = 0x0A; // pin configured for serial communication
+    public static final byte PIN_MODE_PULLUP         = 0x0B; // enable internal pull-up resistor for pin
+    public static final byte PIN_MODE_IGNORE         = 0x7F; // pin configured to be ignored by digitalWrite and capabilityResponse
+    public static final byte TOTAL_PIN_MODES         = 13;
 
     public static final byte I2C_WRITE                = 0X00;
     public static final byte I2C_READ                 = 0X08;

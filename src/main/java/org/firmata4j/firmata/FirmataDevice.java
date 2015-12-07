@@ -372,7 +372,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         byte pinId = (Byte) event.getBodyItem(PIN_ID);
         FirmataPin pin = new FirmataPin(this, pinId);
         for (byte i : (byte[]) event.getBodyItem(PIN_SUPPORTED_MODES)) {
-            pin.addSupprotedMode(Pin.Mode.values()[i]);
+            pin.addSupprotedMode(Pin.Mode.resolve(i));
         }
         pins.add(pin.getIndex(), pin);
         if (pin.getSupportedModes().isEmpty()) {
@@ -397,7 +397,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         byte pinId = (Byte) event.getBodyItem(PIN_ID);
         FirmataPin pin = pins.get(pinId);
         if (pin.getMode() == null) {
-            pin.initMode(Pin.Mode.values()[(Byte) event.getBodyItem(PIN_MODE)]);
+            pin.initMode(Pin.Mode.resolve((Byte) event.getBodyItem(PIN_MODE)));
             pin.initValue((Long) event.getBodyItem(PIN_VALUE));
         } else {
             pin.updateValue((Long) event.getBodyItem(PIN_VALUE));

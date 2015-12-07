@@ -26,6 +26,7 @@ package org.firmata4j;
 
 import java.io.IOException;
 import java.util.Set;
+import org.firmata4j.firmata.parser.FirmataToken;
 
 /**
  * A pin is a connector of an {@link IODevice} to external signal receiver or
@@ -88,7 +89,33 @@ public interface Pin {
          * Enable internal pull-up resistor for pin
          */
         PULLUP,
-        // TODO: #define PIN_MODE_IGNORE         0x7F // pin configured to be ignored by digitalWrite and capabilityResponse
+        
+        // add new modes here
+        
+        /**
+         * Indicates a mode that this client library doesn't support
+         */
+        UNSUPPORTED,
+        /**
+         * Pin configured to be ignored by digitalWrite and capabilityResponse
+         */
+        IGNORED;
+
+        /**
+         * Resolves a mode-token from firmata message to enum value.
+         *
+         * @param modeToken token that stands for mode
+         * @return mode
+         */
+        public static Mode resolve(byte modeToken) {
+            if (modeToken == FirmataToken.PIN_MODE_IGNORE) {
+                return IGNORED;
+            }
+            if (modeToken > FirmataToken.TOTAL_PIN_MODES) {
+                return UNSUPPORTED;
+            }
+            return values()[modeToken];
+        }
     }
 
     /**

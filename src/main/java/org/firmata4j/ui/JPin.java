@@ -171,6 +171,10 @@ public class JPin extends JLabel implements PinEventListener {
         } else if (mode == Pin.Mode.ANALOG) {
             setText(String.valueOf(model.getValue()));
             setIcon(null);
+        } else {
+            // there were no special icon registered, so show gray icon and mode name
+            setIcon(model.getValue() == 0 ? DISABLED_OFF : DISABLED_ON);
+            setText(mode.name());
         }
     }
 }
