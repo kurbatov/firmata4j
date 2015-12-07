@@ -120,6 +120,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                             SerialPort.STOPBITS_1,
                             SerialPort.PARITY_NONE);
                 } catch (SerialPortException ex) {
+                	parserExecutor.interrupt();
                     throw new IOException("Cannot start firmata device", ex);
                 }
             }
@@ -128,6 +129,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                 port.addEventListener(this);
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
             } catch (SerialPortException | IOException ex) {
+               	parserExecutor.interrupt();
                 throw new IOException("Cannot start firmata device", ex);
             }
         }
