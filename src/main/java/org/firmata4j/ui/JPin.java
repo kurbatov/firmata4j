@@ -76,6 +76,10 @@ public class JPin extends JLabel implements PinEventListener {
         iconset.put("on", new ImageIcon(classLoader.getResource("img/green-on.png")));
         iconset.put("off", new ImageIcon(classLoader.getResource("img/green-off.png")));
 
+        ICONS.put(Pin.Mode.PULLUP, iconset);
+        iconset.put("on", new ImageIcon(classLoader.getResource("img/green-on.png")));
+        iconset.put("off", new ImageIcon(classLoader.getResource("img/green-off.png")));
+
         iconset = new HashMap<>();
         ICONS.put(Pin.Mode.OUTPUT, iconset);
         iconset.put("on", new ImageIcon(classLoader.getResource("img/blue-on.png")));
