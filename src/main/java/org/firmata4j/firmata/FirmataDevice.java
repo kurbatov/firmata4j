@@ -108,7 +108,7 @@ public class FirmataDevice implements IODevice {
         transport.setParser(parser);
         this.transport = transport;
     }
-    
+
     /**
      * Constructs FirmataDevice instance using the specified transport and
      * protocol.
@@ -359,7 +359,7 @@ public class FirmataDevice implements IODevice {
             byte pinId = (Byte) event.getBodyItem(PIN_ID);
             FirmataPin pin = new FirmataPin(FirmataDevice.this, pinId);
             for (byte i : (byte[]) event.getBodyItem(PIN_SUPPORTED_MODES)) {
-                pin.addSupprotedMode(Pin.Mode.resolve(i));
+                pin.addSupportedMode(Pin.Mode.resolve(i));
             }
             pins.add(pin.getIndex(), pin);
             if (pin.getSupportedModes().isEmpty()) {
@@ -370,12 +370,12 @@ public class FirmataDevice implements IODevice {
                 try {
                     sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
                     if (pinId > 0 && pinId % 14 == 0) { // 14 pins on Arduino UNO get initialized without delay
-                        /* If the pin count is too high (i.e. Arduino Mega), then 
-                        * too many firmata requests in a row can overflow the 
-                        * device's serial input buffer. 
+                        /* If the pin count is too high (i.e. Arduino Mega), then
+                        * too many firmata requests in a row can overflow the
+                        * device's serial input buffer.
                         * One solution is to yield a little time between
-                        * requests to allow the device to respond. The response 
-                        * may then safely sit in the host's much larger serial 
+                        * requests to allow the device to respond. The response
+                        * may then safely sit in the host's much larger serial
                         * input buffer until it is dealt with by onPinStateReceive
                         */
                         Thread.sleep(10);
