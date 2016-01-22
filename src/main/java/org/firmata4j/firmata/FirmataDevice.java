@@ -146,7 +146,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         } finally {
             IOEvent event = new IOEvent(this);
             for (IODeviceEventListener l : listeners) {
-                l.onStart(event);
+                l.onStop(event);
             }
         }
     }
