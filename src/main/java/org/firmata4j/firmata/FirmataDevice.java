@@ -51,6 +51,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.firmata4j.firmata.parser.FirmataToken;
 
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
@@ -205,9 +206,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     public String getProtocol() {
         return MessageFormat.format(
                 "{0} - {1}.{2}",
-                firmwareInfo.get("name"),
-                firmwareInfo.get("major"),
-                firmwareInfo.get("minor"));
+                firmwareInfo.get(FirmataToken.FIRMWARE_NAME),
+                firmwareInfo.get(FirmataToken.FIRMWARE_MAJOR),
+                firmwareInfo.get(FirmataToken.FIRMWARE_MINOR));
     }
 
     @Override
