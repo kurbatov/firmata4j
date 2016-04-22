@@ -109,11 +109,10 @@ public class FirmataEncoder implements Encoder {
         if (attached) {
             throw new IllegalStateException(MessageFormat.format("Encoder {0} is already attached", getIndex()));
         }
-        boolean willUseInterrupts = pinA.supports(Pin.Mode.ENCODER) || pinB.supports(Pin.Mode.ENCODER);
-        if (!willUseInterrupts) {
-            LOGGER.warn(MessageFormat.format(
-                    "Neither encoder pin ({0}, {1}) supports interrupts. For better performences, you should only use Interrput pins.",
-                    pinA.getIndex(), pinB.getIndex()));
+        if (!(pinA.supports(Pin.Mode.ENCODER) || pinB.supports(Pin.Mode.ENCODER))) {
+            throw new IllegalArgumentException(MessageFormat.format(
+                    "Encoder {0} cannot be attached to pins {1} and {2}. Use at least one interrupt pin for the encoder.",
+                    getIndex(), pinA.getIndex(), pinB.getIndex()));
         }
         try {
             getDevice().sendMessage(FirmataMessageFactory.encoderAttach(getIndex(), pinA.getIndex(), pinB.getIndex()));

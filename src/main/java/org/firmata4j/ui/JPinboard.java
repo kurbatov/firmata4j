@@ -46,7 +46,7 @@ public class JPinboard extends JPanel {
         JPanel anchor = new JPanel();
         GridBagLayout layout = new GridBagLayout();
         anchor.setLayout(layout);
-        int preferredHeight = 70;
+        int preferredHeight = 100;
         GridBagConstraints constraints = new GridBagConstraints();
         for (int i = 0; i < model.getPinsCount(); i++) {
             JPin pin = new JPin(model.getPin(i));
@@ -66,7 +66,7 @@ public class JPinboard extends JPanel {
             anchor.add(label);
         }
         if (model.getEncoderCount()>0) {
-            preferredHeight += 70;
+            preferredHeight += 50;
             for (int i=0; i<model.getEncoderCount(); i++) {
                 JEncoder encoder = new JEncoder(model.getEncoder(i));
                 constraints = new GridBagConstraints();
@@ -84,7 +84,7 @@ public class JPinboard extends JPanel {
                 anchor.add(label);
             }
         }
-        JScrollPane scroll = new JScrollPane(anchor, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        JScrollPane scroll = new JScrollPane(anchor, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scroll.setPreferredSize(new java.awt.Dimension(70*model.getPinsCount(), preferredHeight));
         GridBagLayout mainLayout = new GridBagLayout();
         this.setLayout(mainLayout);

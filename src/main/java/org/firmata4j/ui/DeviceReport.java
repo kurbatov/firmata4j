@@ -91,6 +91,9 @@ public class DeviceReport {
 
     public static String formatEncoderList(IODevice device) {
         int numEncoders = device.getEncoderCount();
+        if (numEncoders == 0) {
+            return "Encoders not supported by firmware\n";
+        }
         // line 1: header
         StringBuilder report = new StringBuilder(String.format("%11s A  B ", ""));
         // line 2: separators
