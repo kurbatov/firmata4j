@@ -105,6 +105,18 @@ public class JEncoder extends JTextField implements EncoderEventListener {
         SwingUtilities.invokeLater(refreshRoutine);
     }
 
+    @Override
+    public void onAttach(IOEvent event) {
+        SwingUtilities.invokeLater(refreshRoutine);
+        System.out.print(DeviceReport.formatEncoderList(model.getDevice()));
+    }
+
+    @Override
+    public void onDetach(IOEvent event) {
+        SwingUtilities.invokeLater(refreshRoutine);
+        System.out.print(DeviceReport.formatEncoderList(model.getDevice()));
+    }
+    
     public final void setModel(final Encoder model) {
         if (this.model != null) {
             this.model.removeEventListener(this);
@@ -129,7 +141,6 @@ public class JEncoder extends JTextField implements EncoderEventListener {
                 }
                 try {
                     model.attach(pins.get(0), pins.get(1));
-                    SwingUtilities.invokeLater(refreshRoutine);
                 } catch (IOException | IllegalArgumentException | IllegalStateException ex) {
                     Logger.getLogger(JEncoder.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(JEncoder.this, ex.getLocalizedMessage(), "", JOptionPane.ERROR_MESSAGE);
@@ -142,7 +153,6 @@ public class JEncoder extends JTextField implements EncoderEventListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     model.detach();
-                    SwingUtilities.invokeLater(refreshRoutine);
                 } catch (IOException | IllegalArgumentException | IllegalStateException ex) {
                     Logger.getLogger(JEncoder.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(JEncoder.this, ex.getLocalizedMessage(), "", JOptionPane.ERROR_MESSAGE);
@@ -155,7 +165,6 @@ public class JEncoder extends JTextField implements EncoderEventListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     model.resetPosition();
-                    SwingUtilities.invokeLater(refreshRoutine);
                 } catch (IOException | IllegalArgumentException | IllegalStateException ex) {
                     Logger.getLogger(JEncoder.class.getName()).log(Level.SEVERE, null, ex);
                     JOptionPane.showMessageDialog(JEncoder.this, ex.getLocalizedMessage(), "", JOptionPane.ERROR_MESSAGE);
@@ -175,6 +184,5 @@ public class JEncoder extends JTextField implements EncoderEventListener {
             setText("detached");
         }
     }
-    
 
 }

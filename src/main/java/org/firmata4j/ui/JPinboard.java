@@ -28,6 +28,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import org.firmata4j.IODevice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,39 +43,60 @@ public class JPinboard extends JPanel {
     private static final Logger LOGGER = LoggerFactory.getLogger(JPinboard.class);
 
     public JPinboard(IODevice model) {
+        JPanel anchor = new JPanel();
         GridBagLayout layout = new GridBagLayout();
-
-        setLayout(layout);
+        anchor.setLayout(layout);
+        int preferredHeight = 70;
+        GridBagConstraints constraints = new GridBagConstraints();
         for (int i = 0; i < model.getPinsCount(); i++) {
             JPin pin = new JPin(model.getPin(i));
-            GridBagConstraints constraints = new GridBagConstraints();
+            constraints = new GridBagConstraints();
             constraints.gridy = 0;
-            constraints.fill = GridBagConstraints.HORIZONTAL;
             constraints.weightx = 1;
+            constraints.anchor = GridBagConstraints.CENTER;
+            constraints.fill = GridBagConstraints.NONE;
             layout.setConstraints(pin, constraints);
-            add(pin);
+            anchor.add(pin);
             constraints = new GridBagConstraints();
             constraints.gridy = 1;
+            constraints.anchor = GridBagConstraints.CENTER;
+            constraints.fill = GridBagConstraints.NONE;
             JLabel label = new JLabel(String.valueOf(i));
             layout.setConstraints(label, constraints);
-            add(label);
+            anchor.add(label);
         }
         if (model.getEncoderCount()>0) {
+            preferredHeight += 70;
             for (int i=0; i<model.getEncoderCount(); i++) {
                 JEncoder encoder = new JEncoder(model.getEncoder(i));
-                GridBagConstraints constraints = new GridBagConstraints();
+                constraints = new GridBagConstraints();
                 constraints.gridy = 2;
-                constraints.fill = GridBagConstraints.HORIZONTAL;
                 constraints.weightx = 1;
+                constraints.fill = GridBagConstraints.HORIZONTAL;
                 layout.setConstraints(encoder, constraints);
-                add(encoder);
+                anchor.add(encoder);
                 constraints = new GridBagConstraints();
                 constraints.gridy = 3;
+                constraints.anchor = GridBagConstraints.CENTER;
+                constraints.fill = GridBagConstraints.NONE;
                 JLabel label = new JLabel(String.valueOf(i));
                 layout.setConstraints(label, constraints);
-                add(label);
+                anchor.add(label);
             }
         }
+        JScrollPane scroll = new JScrollPane(anchor, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        scroll.setPreferredSize(new java.awt.Dimension(70*model.getPinsCount(), preferredHeight));
+        GridBagLayout mainLayout = new GridBagLayout();
+        this.setLayout(mainLayout);
+        constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        constraints.fill = GridBagConstraints.BOTH;
+        mainLayout.setConstraints(scroll, constraints);
+        this.add(scroll);
+        this.doLayout();
     }
     
 }

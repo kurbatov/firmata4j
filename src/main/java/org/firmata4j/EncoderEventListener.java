@@ -37,5 +37,16 @@ public interface EncoderEventListener {
      * @param event encodes the encoder number and new position
      */
     public void onPositionChange(IOEvent event);
-
+    
+    /**
+     * Invoked after encoder is attached.
+     * @param event encodes the encoder number and new position
+     */
+    public void onAttach(IOEvent event);
+    
+    /**
+     * Invoked after encoder is detached.
+     * @param event encodes the encoder number and new position
+     */
+    public void onDetach(IOEvent event);
 }

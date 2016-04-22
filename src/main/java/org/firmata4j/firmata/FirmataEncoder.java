@@ -44,6 +44,8 @@ public class FirmataEncoder implements Encoder {
     private final FirmataDevice device;
     private final byte encoderId;
     private final Set<EncoderEventListener> listeners = Collections.synchronizedSet(new HashSet<EncoderEventListener>());
+    private volatile Pin pinA;
+    private volatile Pin pinB;
     private volatile long currentPosition;
     private volatile boolean attached;
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
@@ -58,6 +60,8 @@ public class FirmataEncoder implements Encoder {
         this.device = device;
         this.encoderId = index;
         this.attached = false;
+        this.pinA = null;
+        this.pinB = null;
     }
 
     @Override
@@ -82,6 +86,11 @@ public class FirmataEncoder implements Encoder {
         if (currentPosition != newPosition) {
             device.sendMessage(message);
             updatePosition(newPosition);
+            IOEvent evt = new IOEvent(this);
+            getDevice().encoderChanged(evt); // the device listeners receive the event first
+            for (EncoderEventListener listener : listeners) { // then pin listeners receive the event
+                listener.onPositionChange(evt);
+            }
         }
     }
 
@@ -117,10 +126,17 @@ public class FirmataEncoder implements Encoder {
             if (pinB instanceof FirmataPin) {
                 // The FirmataEncoder library automatically switches the pin's
                 // mode to ENCODER. Update the FirmataPin's mode cache
-                FirmataPin firmataPin = (FirmataPin) pinA;
+                FirmataPin firmataPin = (FirmataPin) pinB;
                 firmataPin.initMode(Pin.Mode.ENCODER);
             }
             attached = true;
+            this.pinA = pinA;
+            this.pinB = pinB;
+            IOEvent evt = new IOEvent(this);
+            getDevice().encoderChanged(evt); // the device listeners receive the event first
+            for (EncoderEventListener listener : listeners) { // then pin listeners receive the event
+                listener.onAttach(evt);
+            }
         } catch (IOException e) {
             throw new IOException("Cannot attach encoder to device.", e);
         }
@@ -134,7 +150,15 @@ public class FirmataEncoder implements Encoder {
         try {
             getDevice().sendMessage(FirmataMessageFactory.encoderDetach(getIndex()));
             attached = false;
+            pinA = null;
+            pinB = null;
+            currentPosition = 0;
             // NOTE: The encoder pin modes are not changed from ENCODER
+            IOEvent evt = new IOEvent(this);
+            getDevice().encoderChanged(evt); // the device listeners receive the event first
+            for (EncoderEventListener listener : listeners) { // then pin listeners receive the event
+                listener.onDetach(evt);
+            }
         } catch (IOException e) {
             throw new IOException("Cannot detach encoder from device.", e);
         }
@@ -156,5 +180,14 @@ public class FirmataEncoder implements Encoder {
         return attached;
     }
 
+    @Override
+    public Pin getPinA() {
+        return pinA;
+    }
+
+    @Override
+    public Pin getPinB() {
+        return pinB;
+    }
 
 }

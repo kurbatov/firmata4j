@@ -357,7 +357,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
     }
     
-
     /**
      * Describes reaction to protocol receiving.
      *
@@ -424,6 +423,19 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             // if the pin supports some modes, we ask for its current mode and value
             try {
                 sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
+                /* If the pin count is too high (i.e. Arduino Mega), then 
+                * too many firmata requests in a row can overflow the 
+                * device's serial input buffer. 
+                * One solution is to yield a little time between
+                * requests to allow the device to respond. The response may
+                * then safely sit in the host's much larger serial input
+                * buffer until it is dealt with by onPinStateReceive
+                 */
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    // ignore
+                }
             } catch (IOException ex) {
                 LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
             }

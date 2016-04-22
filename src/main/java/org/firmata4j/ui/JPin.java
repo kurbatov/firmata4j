@@ -129,6 +129,7 @@ public class JPin extends JLabel implements PinEventListener {
     @Override
     public void onModeChange(IOEvent event) {
         SwingUtilities.invokeLater(refreshRoutine);
+        System.out.print(DeviceReport.formatPinList(model.getDevice()));
     }
 
     @Override

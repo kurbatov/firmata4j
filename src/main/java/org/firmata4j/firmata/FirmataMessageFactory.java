@@ -66,7 +66,7 @@ public class FirmataMessageFactory {
      *
      * @param slaveAddress
      * @param bytesToWrite
-     * @return
+     * @return message that requests i2c write
      */
     public static byte[] i2CWriteRequest(final byte slaveAddress,byte[] bytesToWrite){
         byte[] result = new byte[bytesToWrite.length*2+5];
@@ -98,7 +98,7 @@ public class FirmataMessageFactory {
      *                      matching returned message to the request.
      * @param bytesToRead the number of bytes that the device will return
      * @param continuous repeatedly send updates until asked to stop
-     * @return
+     * @return message that requests i2c read
      */
 
     public static byte[] i2CReadRequest(final byte slaveAddress,final byte slaveRegister, int bytesToRead, boolean continuous){
@@ -271,7 +271,7 @@ public class FirmataMessageFactory {
      * @param pinId
      * @param minPulse
      * @param maxPulse
-     * @return
+     * @return message that requests servo configuration
      */
     public static byte[] servoConfig(byte pinId, int minPulse, int maxPulse) {
         return new byte[]{

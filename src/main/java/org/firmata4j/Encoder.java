@@ -29,10 +29,10 @@ import org.firmata4j.firmata.FirmataDevice;
 /**
  * An encoder is a connector of an {@link IODevice} to a rotary encoder.
  * 
- * Use {@link attach} to attach the encoder to two digital pins. Ideally,
+ * Use {@link #attach} to attach the encoder to two digital pins. Ideally,
  * one or both of the pins should be interrupt capable to minimize the
  * chance of missing a position change. Interrupt capable pins have the
- * {@link Pin.Mode.ENCODER} flag set. Having both pins on an interrupt
+ * {@link Pin.Mode#ENCODER} flag set. Having both pins on an interrupt
  * minimizes the chances of missing an encoder step.
  * 
  * However, the Arduino Encoder library can work with any digital pin by polling.
@@ -82,6 +82,20 @@ public interface Encoder {
      */
     void detach() throws IOException, IllegalStateException;
     
+    /** 
+     * Gets the first pin attached to this encoder
+     * 
+     * @return the A pin or null if the encoder is detached
+     */
+    Pin getPinA();
+
+    /** 
+     * Gets the second pin attached to this encoder
+     * 
+     * @return the B pin or null if the encoder is detached
+     */
+    Pin getPinB();
+    
     /**
      * Determine whether encoder is attached.
      * 
@@ -103,5 +117,5 @@ public interface Encoder {
      * @param listener the listener
      */
     void removeEventListener(EncoderEventListener listener);
-
+    
 }

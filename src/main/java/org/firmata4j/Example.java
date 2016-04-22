@@ -45,7 +45,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import jssc.SerialNativeInterface;
 import jssc.SerialPortList;
+import org.firmata4j.ui.DeviceReport;
 import org.firmata4j.ui.JPinboard;
 
 /**
@@ -72,6 +74,8 @@ public class Example {
         showInitializationMessage();
         device.start();
         device.ensureInitializationIsDone();
+        System.out.println(DeviceReport.formatPinList(device));
+        System.out.println(DeviceReport.formatEncoderList(device));
         hideInitializationWindow();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -109,7 +113,14 @@ public class Example {
     private static String requestPort() {
         JComboBox<String> portNameSelector = new JComboBox<>();
         portNameSelector.setModel(new DefaultComboBoxModel<String>());
-        String[] portNames = SerialPortList.getPortNames("/dev/",Pattern.compile("cu.*"));
+        String[] portNames;
+        if (SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X) {
+            // fix for Mac 
+            // default pattern in jssc serial library is too restrictive
+            portNames = SerialPortList.getPortNames("/dev/",Pattern.compile("tty\\..*"));
+        } else {
+            portNames = SerialPortList.getPortNames();
+        }
         for (String portName : portNames) {
             portNameSelector.addItem(portName);
         }
