@@ -58,7 +58,7 @@ public class Example {
     private static final JFrame INITIALIZATION_FRAME = new JFrame();
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
+        //System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
         
         try { // set look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -71,7 +71,6 @@ public class Example {
         showInitializationMessage();
         device.start();
         device.ensureInitializationIsDone();
-        System.exit(0);
         hideInitializationWindow();
         SwingUtilities.invokeLater(new Runnable() {
             @Override

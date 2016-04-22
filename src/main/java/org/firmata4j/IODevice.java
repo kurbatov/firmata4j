@@ -110,8 +110,6 @@ public interface IODevice {
     
     public Encoder getEncoder(int index);
 
-    boolean isAttached(Encoder encoder);
-
     /**
      * Adds the specified listener to receive events from this device.
      *

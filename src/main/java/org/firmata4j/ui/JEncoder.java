@@ -128,7 +128,7 @@ public class JEncoder extends JTextField implements EncoderEventListener {
                     JOptionPane.showMessageDialog(JEncoder.this, "Invalid encoder pins "+inputValue,"",JOptionPane.ERROR_MESSAGE);
                 }
                 try {
-                    model.getDevice().attachEncoder(model, pins.get(0), pins.get(1));
+                    model.attach(pins.get(0), pins.get(1));
                     SwingUtilities.invokeLater(refreshRoutine);
                 } catch (IOException | IllegalArgumentException | IllegalStateException ex) {
                     Logger.getLogger(JEncoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -141,7 +141,7 @@ public class JEncoder extends JTextField implements EncoderEventListener {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    model.getDevice().detachEncoder(model);
+                    model.detach();
                     SwingUtilities.invokeLater(refreshRoutine);
                 } catch (IOException | IllegalArgumentException | IllegalStateException ex) {
                     Logger.getLogger(JEncoder.class.getName()).log(Level.SEVERE, null, ex);
@@ -169,7 +169,7 @@ public class JEncoder extends JTextField implements EncoderEventListener {
     }
     
     private void refreshText() {
-        if (model.getDevice().isAttached(model)) {
+        if (model.isAttached()) {
             setText(String.valueOf(model.getPosition()));
         } else {
             setText("detached");

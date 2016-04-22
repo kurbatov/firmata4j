@@ -75,6 +75,8 @@ public interface Encoder {
      */
     void attach(Pin a, Pin b) throws IOException, IllegalArgumentException, IllegalStateException;
     
+    void detach() throws IOException, IllegalStateException;
+    
     boolean isAttached();
     
     void addEventListener(EncoderEventListener listener);
