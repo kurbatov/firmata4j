@@ -59,6 +59,22 @@ public class JPinboard extends JPanel {
             layout.setConstraints(label, constraints);
             add(label);
         }
+        if (model.getEncoderCount()>0) {
+            for (int i=0; i<model.getEncoderCount(); i++) {
+                JEncoder encoder = new JEncoder(model.getEncoder(i));
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.gridy = 2;
+                constraints.fill = GridBagConstraints.HORIZONTAL;
+                constraints.weightx = 1;
+                layout.setConstraints(encoder, constraints);
+                add(encoder);
+                constraints = new GridBagConstraints();
+                constraints.gridy = 3;
+                JLabel label = new JLabel(String.valueOf(i));
+                layout.setConstraints(label, constraints);
+                add(label);
+            }
+        }
     }
     
 }

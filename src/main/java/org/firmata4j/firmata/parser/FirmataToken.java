@@ -149,6 +149,15 @@ public interface FirmataToken {
 
     public static final int MIN_SAMPLING_INTERVAL    = 10;
     public static final int MAX_SAMPLING_INTERVAL    = 100;
+    
+    // encoder control
+    public static final int MAX_ENCODERS                = 5;    // hard-coded to match FirmataEncoder library
+    public static final byte ENCODER_ATTACH             = 0x00; // attach encoder to pins. No response
+    public static final byte ENCODER_REPORT_POSITION    = 0x01; // report single encoder position. Expects response
+    public static final byte ENCODER_REPORT_POSITIONS   = 0x02; // report all encoder positions. Expects response. NOT USED YET
+    public static final byte ENCODER_RESET_POSITION     = 0x03; // reset encoder position to zero. No response
+    public static final byte ENCODER_REPORT_AUTO        = 0x04; // enable auto-reporting of recorder positions during sample interval. No response
+    public static final byte ENCODER_DETACH             = 0x05; // detach encoder from pins. No response
 
     // event types and names
     public static final String FIRMATA_MESSAGE_EVENT_TYPE = "firmataMessage";
@@ -175,6 +184,10 @@ public interface FirmataToken {
     public static final String PIN_SUPPORTED_MODES = "supportedModes";
     public static final String PIN_MODE = "pinMode";
     public static final String PIN_VALUE = "pinValue";
+    
+    public static final String ENCODER_STATE = "encoderState";
+    public static final String ENCODER_ID = "encoderId";
+    public static final String ENCODER_POSITION = "encoderPosition";
     
     public static final String SYSTEM_RESET_MESSAGE = "systemReset";
     

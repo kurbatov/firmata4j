@@ -33,6 +33,7 @@ public class IOEvent {
 
     private final IODevice device;
     private final Pin pin;
+    private final Encoder encoder;
     private final long value;
     private final long timestamp;
     private final boolean i2cEvent;
@@ -45,6 +46,7 @@ public class IOEvent {
     public IOEvent(IODevice device) {
         this.device = device;
         this.pin = null;
+        this.encoder = null;
         this.value = 0;
         this.timestamp = System.currentTimeMillis();
         this.i2cEvent = false;
@@ -58,6 +60,7 @@ public class IOEvent {
     public IOEvent(IODevice device,boolean isI2CEvent) {
         this.device = device;
         this.pin = null;
+        this.encoder = null;
         this.value = 0;
         this.timestamp = System.currentTimeMillis();
         this.i2cEvent = isI2CEvent;
@@ -74,6 +77,7 @@ public class IOEvent {
     public IOEvent(IODevice device, long timestamp) {
         this.device = device;
         this.pin = null;
+        this.encoder = null;
         this.value = 0;
         this.timestamp = timestamp;
         this.i2cEvent = false;
@@ -87,6 +91,7 @@ public class IOEvent {
     public IOEvent(Pin pin) {
         this.device = pin.getDevice();
         this.pin = pin;
+        this.encoder = null;
         this.value = pin.getValue();
         this.timestamp = System.currentTimeMillis();
         this.i2cEvent = false;
@@ -103,7 +108,26 @@ public class IOEvent {
     public IOEvent(Pin pin, long timestamp) {
         this.device = pin.getDevice();
         this.pin = pin;
+        this.encoder = null;
         this.value = pin.getValue();
+        this.timestamp = timestamp;
+        this.i2cEvent = false;
+    }
+
+    public IOEvent(Encoder encoder) {
+        this.device = encoder.getDevice();
+        this.pin = null;
+        this.encoder = encoder;
+        this.value = encoder.getPosition();
+        this.timestamp = System.currentTimeMillis();
+        this.i2cEvent = false;
+    }
+    
+    public IOEvent(Encoder encoder, long timestamp) {
+        this.device = encoder.getDevice();
+        this.pin = null;
+        this.encoder = encoder;
+        this.value = encoder.getPosition();
         this.timestamp = timestamp;
         this.i2cEvent = false;
     }
@@ -126,6 +150,10 @@ public class IOEvent {
      */
     public Pin getPin() {
         return pin;
+    }
+    
+    public Encoder getEncoder() {
+        return encoder;
     }
 
     /**

@@ -57,6 +57,7 @@ public class ParsingSysexMessageState extends AbstractState {
         STATES.put(PIN_STATE_RESPONSE, PinStateParsingState.class);
         STATES.put(STRING_DATA, ParsingStringMessageState.class);
         STATES.put(I2C_REPLY,ParsingI2CMessageState.class);
+        STATES.put(ENCODER_DATA, ParsingEncoderPositionState.class);
     }
 
     public ParsingSysexMessageState(FiniteStateMachine fsm) {

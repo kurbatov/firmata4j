@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -57,6 +58,8 @@ public class Example {
     private static final JFrame INITIALIZATION_FRAME = new JFrame();
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
+        
         try { // set look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
@@ -68,6 +71,7 @@ public class Example {
         showInitializationMessage();
         device.start();
         device.ensureInitializationIsDone();
+        System.exit(0);
         hideInitializationWindow();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -105,7 +109,7 @@ public class Example {
     private static String requestPort() {
         JComboBox<String> portNameSelector = new JComboBox<>();
         portNameSelector.setModel(new DefaultComboBoxModel<String>());
-        String[] portNames = SerialPortList.getPortNames();
+        String[] portNames = SerialPortList.getPortNames("/dev/",Pattern.compile("cu.*"));
         for (String portName : portNames) {
             portNameSelector.addItem(portName);
         }

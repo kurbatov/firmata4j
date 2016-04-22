@@ -24,6 +24,7 @@
 
 package org.firmata4j.firmata.parser;
 
+import com.sun.media.jfxmedia.logging.Logger;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;

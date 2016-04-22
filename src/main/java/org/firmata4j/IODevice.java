@@ -87,6 +87,8 @@ public interface IODevice {
      * @see Pin
      */
     public Set<Pin> getPins();
+    
+    public Set<Encoder> getEncoders();
 
     /**
      * Returns count of pins of the device.
@@ -94,6 +96,8 @@ public interface IODevice {
      * @return count of pins
      */
     public int getPinsCount();
+    
+    public int getEncoderCount();
 
     /**
      * Returns a pin by its index on device. The index should be less than
@@ -103,6 +107,10 @@ public interface IODevice {
      * @return the pin
      */
     public Pin getPin(int index);
+    
+    public Encoder getEncoder(int index);
+
+    boolean isAttached(Encoder encoder);
 
     /**
      * Adds the specified listener to receive events from this device.
@@ -138,8 +146,9 @@ public interface IODevice {
 
     public void initI2C(int delayInMicroseconds) throws IOException;
 
-    public void writeI2CData(byte slaveAddress, byte[] data) throws IOException;
+    public void writeI2CData(byte slaveAddress, byte[] data) throws IOException, IllegalArgumentException;
 
-    public void requestI2CData(byte slaveAddress, byte slaveRegister, byte byteCount, boolean continuous) throws IOException;
+    public void requestI2CData(byte slaveAddress, byte slaveRegister, byte byteCount, boolean continuous) throws IOException, IllegalArgumentException;
+
 
 }

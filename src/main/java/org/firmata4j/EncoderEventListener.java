@@ -25,51 +25,17 @@
 package org.firmata4j;
 
 /**
- * This interface describes an object that can receive and handle events from an
- * {@link IODevice}.
+ * The listener interface for receiving events from {@link Encoder}. When encoder's
+ * position changes, the relevant method in the listener object is invoked.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public interface IODeviceEventListener {
-
-    /**
-     * Invoked when an {@link IODevice} has been successfully started
-     * and initialized.
-     *
-     * @param event the event
-     */
-    public void onStart(IOEvent event);
-
-    /**
-     * Invoked when communication with {@link IODevice} has been 
-     * successfully terminated.
-     *
-     * @param event the event
-     */
-    public void onStop(IOEvent event);
-
-    /**
-     * Invoked when the state of one of device's pins has been changed.
-     * It can be change of mode or a value.
-     *
-     * @param event the event
-     */
-    public void onPinChange(IOEvent event);
-    
-    public void onEncoderChange(IOEvent event);
+public interface EncoderEventListener {
     
     /**
-     * Invoked when an I2C message has been received from the device.
-     *
-     * @param message the message
+     * Invoked when encoder's position changes.
+     * @param event 
      */
-    public void onI2cMessageReceive(IOEvent event, byte slaveAddress, byte register, byte[] message);
-
-    /**
-     * Invoked when a string message has been received from the device.
-     * 
-     * @param message the message
-     */
-    public void onMessageReceive(IOEvent event, String message);
+    public void onPositionChange(IOEvent event);
 
 }

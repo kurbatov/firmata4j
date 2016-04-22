@@ -24,6 +24,7 @@
 
 package org.firmata4j.ui;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -93,6 +94,7 @@ public class JPin extends JLabel implements PinEventListener {
         setHorizontalAlignment(JLabel.CENTER);
         modesMenu = new JPopupMenu(String.valueOf(pin.getIndex()));
         setModel(pin);
+        this.setPreferredSize(new Dimension(60,60));
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

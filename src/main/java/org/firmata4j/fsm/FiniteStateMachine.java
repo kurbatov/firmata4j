@@ -131,7 +131,8 @@ public abstract class FiniteStateMachine {
             evt.setBodyItem("fsm", this);
             onEvent(evt);
         } else {
-            LOGGER.trace("processing of byte {} with {}", b, currentState);
+            //String bhex = String.format("0x%02X", b & 0xFF);
+            //LOGGER.trace("processing of byte {} with {}", bhex, currentState);
             currentState.process(b);
         }
     }

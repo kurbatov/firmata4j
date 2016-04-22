@@ -284,6 +284,33 @@ public class FirmataMessageFactory {
         };
     }
     
+    public static byte[] encoderAttach(byte encoderId, byte pinAId, byte pinBId) {
+        return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_ATTACH,
+            encoderId, pinAId, pinBId, END_SYSEX
+        };
+    }
+    
+    public static byte[] encoderReportPosition(byte encoderId) {
+        return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_REPORT_POSITION,
+            encoderId, END_SYSEX};
+    }
+    
+    public static byte[] encoderResetPosition(byte encoderId) {
+        return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_RESET_POSITION,
+            encoderId, END_SYSEX};
+    }
+    
+    public static byte[] encoderReport(boolean enable) {
+        return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_REPORT_AUTO,
+            (byte) (enable ? 1 : 0), END_SYSEX};
+    }
+    
+    public static byte[] encoderDetach(byte encoderId) {
+        return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_DETACH,
+            encoderId, END_SYSEX
+        };
+    }
+
     /**
      * Encodes the string as a SysEx message.
      * 

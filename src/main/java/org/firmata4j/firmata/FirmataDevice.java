@@ -51,6 +51,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import org.firmata4j.Encoder;
 import org.firmata4j.firmata.parser.FirmataToken;
 
 import static org.firmata4j.firmata.parser.FirmataToken.*;
@@ -68,6 +70,8 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     private final SerialPort port;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
+    private final List<FirmataEncoder> encoders = Collections.synchronizedList(new ArrayList<FirmataEncoder>());
+    private final Set<FirmataEncoder> attachedEncoders = Collections.synchronizedSet(new HashSet<FirmataEncoder>());
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean ready = new AtomicBoolean(false);
     private final AtomicInteger initializedPins = new AtomicInteger(0);
@@ -191,10 +195,20 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     public Set<Pin> getPins() {
         return new HashSet<Pin>(pins);
     }
+    
+    @Override
+    public Set<Encoder> getEncoders() {
+        return new HashSet<Encoder>(encoders);
+    }
 
     @Override
     public int getPinsCount() {
         return pins.size();
+    }
+    
+    @Override
+    public int getEncoderCount() {
+        return encoders.size();
     }
 
     @Override
@@ -202,6 +216,16 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         return pins.get(index);
     }
 
+    @Override
+    public Encoder getEncoder(int index) {
+        return encoders.get(index);
+    }
+    
+    @Override
+    public boolean isAttached(Encoder encoder) {
+        return attachedEncoders.contains(encoder);
+    }
+    
     @Override
     public String getProtocol() {
         return MessageFormat.format(
@@ -259,6 +283,12 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             listener.onPinChange(event);
         }
     }
+    
+    void encoderChanged(IOEvent event) {
+        for (IODeviceEventListener listener : listeners) {
+            listener.onEncoderChange(event);
+        }
+    }
 
     /**
      * Tries to release all resources and properly terminate the connection to
@@ -271,6 +301,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         try {
             sendMessage(FirmataMessageFactory.analogReport(false));
             sendMessage(FirmataMessageFactory.digitalReport(false));
+            sendMessage(FirmataMessageFactory.encoderReport(false));
             port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
             port.closePort();
         } catch (SerialPortException ex) {
@@ -325,7 +356,72 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             throw new IOException("Cannot write i2c data to device.", e);
         }
     }
+    
+    public void attachEncoder(Encoder encoder, Pin pinA, Pin pinB) throws IOException, IllegalStateException {
+        boolean willUseInterrupts = pinA.supports(Pin.Mode.ENCODER) || pinB.supports(Pin.Mode.ENCODER);
+        if (!willUseInterrupts) {
+            LOGGER.warn(
+                    MessageFormat.format(
+                            "Neither encoder pin ({0}, {1}) supports interrupts. For better performences, you should only use Interrput pins.",
+                            pinA.getIndex(), pinB.getIndex()));
+        }
+        try {
+            sendMessage(FirmataMessageFactory.encoderAttach(encoder.getIndex(), pinA.getIndex(), pinB.getIndex()));
+            if (pinA instanceof FirmataPin) {
+                // The FirmataEncoder library automatically switches the pin's
+                // mode to ENCODER. Update the FirmataPin's mode cache
+                FirmataPin firmataPin = (FirmataPin) pinA;
+                firmataPin.initMode(Pin.Mode.ENCODER);
+            }
+            if (pinB instanceof FirmataPin) {
+                // The FirmataEncoder library automatically switches the pin's
+                // mode to ENCODER. Update the FirmataPin's mode cache
+                FirmataPin firmataPin = (FirmataPin) pinA;
+                firmataPin.initMode(Pin.Mode.ENCODER);
+            }
+            if (encoder instanceof FirmataEncoder) {
+                attachedEncoders.add((FirmataEncoder) encoder);
+            }
+        } catch (IOException e) {
+            throw new IOException("Cannot attach encoder to device.", e);
+        }
 
+    }
+
+    public Encoder attachEncoder(Pin pinA, Pin pinB) throws IOException, IllegalArgumentException, IllegalStateException {
+        if (attachedEncoders.size() >= encoders.size()) {
+            throw new IllegalStateException("Too many encoders requested");
+        }
+        FirmataEncoder encoder = null;
+        // find the first detached encoder
+        for (FirmataEncoder e : encoders) {
+            if (!attachedEncoders.contains(e)) {
+                encoder = e;
+                break;
+            }
+        }
+        if (encoder == null) {
+            throw new IllegalStateException("Could not find unattached encoder");
+        }
+        attachEncoder(encoder, pinA, pinB);
+        return encoder;
+    }
+
+    public void detachEncoder(Encoder encoder) throws IOException, IllegalArgumentException {
+        if (!attachedEncoders.contains(encoder)) {
+            throw new IllegalArgumentException("Attempting to detach unattached encoder");
+        }
+        try {
+            sendMessage(FirmataMessageFactory.encoderDetach(encoder.getIndex()));
+            if (encoder instanceof FirmataEncoder) {
+                attachedEncoders.remove((FirmataEncoder) encoder);
+            }
+            // NOTE: The encoder pin modes are not changed from ENCODER
+        } catch (IOException e) {
+            throw new IOException("Cannot detach encoder from device.", e);
+        }
+    }
+    
     /**
      * Describes reaction to protocol receiving.
      *
@@ -375,7 +471,14 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         byte pinId = (Byte) event.getBodyItem(PIN_ID);
         FirmataPin pin = new FirmataPin(this, pinId);
         for (byte i : (byte[]) event.getBodyItem(PIN_SUPPORTED_MODES)) {
-            pin.addSupprotedMode(Pin.Mode.resolve(i));
+            Pin.Mode m = Pin.Mode.resolve(i);
+            pin.addSupprotedMode(m);
+            if (m == Pin.Mode.ENCODER && encoders.isEmpty()) {
+                // Encoders are supported if any pin reports encoder mode
+                for (byte e=0; e<FirmataToken.MAX_ENCODERS; e++) {
+                    encoders.add(new FirmataEncoder(this, e));
+                }
+            }
         }
         pins.add(pin.getIndex(), pin);
         if (pin.getSupportedModes().isEmpty()) {
@@ -414,6 +517,16 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
     }
 
+    private void onEncoderStateRecieve(Event event) {
+        byte encoderId = (Byte) event.getBodyItem(ENCODER_ID);
+        if (encoderId >= encoders.size()) {
+            LOGGER.error(MessageFormat.format("Encoder {0} out of range.", encoderId));
+            return;
+        }
+        FirmataEncoder encoder = encoders.get(encoderId);
+        encoder.updatePosition((Long) event.getBodyItem(ENCODER_POSITION));
+    }
+    
     /**
      * Describes reaction to the analog mapping data receiving.
      *
@@ -425,6 +538,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         try {
             sendMessage(FirmataMessageFactory.analogReport(true));
             sendMessage(FirmataMessageFactory.digitalReport(true));
+            sendMessage(FirmataMessageFactory.encoderReport(true));
         } catch (IOException ex) {
             LOGGER.error("Cannot enable reporting from device", ex);
         }
@@ -495,7 +609,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
         return outBuffer;
     }
-
+    
     private void onStringMessageReceive(Event event) {
         String message = (String) event.getBodyItem(STRING_MESSAGE);
         IOEvent evt = new IOEvent(this);
@@ -547,6 +661,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                     break;
                 case I2C_MESSAGE:
                     onI2cMessageReceive(event);
+                    break;
+                case ENCODER_STATE:
+                    onEncoderStateRecieve(event);
                     break;
                 case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
                     // should never happen but who knows
