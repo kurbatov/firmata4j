@@ -114,6 +114,11 @@ public class IOEvent {
         this.i2cEvent = false;
     }
 
+    /**
+     * Constructs the event is relevant to a particular {@link Encoder}.
+     *
+     * @param encoder the encoder that originated the event
+     */
     public IOEvent(Encoder encoder) {
         this.device = encoder.getDevice();
         this.pin = null;
@@ -123,6 +128,14 @@ public class IOEvent {
         this.i2cEvent = false;
     }
     
+    /**
+     * Constructs the event is relevant to a particular {@link Encoder}.
+     * <br/>
+     * This constructor allows setting the timestamp of event.
+     * 
+     * @param encoder the encoder that originated the event
+     * @param timestamp the timestamp of event
+     */
     public IOEvent(Encoder encoder, long timestamp) {
         this.device = encoder.getDevice();
         this.pin = null;
@@ -152,16 +165,23 @@ public class IOEvent {
         return pin;
     }
     
+    /**
+     * Returns the encoder that relates to the event. If the event does not involve
+     * any particular encoder, it returns null.
+     *
+     * @return the encoder that originated the event or null if an encoder is not
+     * involved in the event
+     */
     public Encoder getEncoder() {
         return encoder;
     }
 
     /**
-     * Returns the value the pin received.
+     * Returns the value the pin received or the position of the encoder received.
      * <br/>
-     * If the event is not about pin, always returns 0.
+     * If the event is not about pin or encoder, always returns 0.
      * 
-     * @return the value the pin received
+     * @return the value the pin received or position of the encoder
      */
     public long getValue() {
         return value;

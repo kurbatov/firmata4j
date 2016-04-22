@@ -42,7 +42,7 @@ import org.firmata4j.firmata.FirmataDevice;
 public interface Encoder {
 
     /**
-     * Return an {@link IODevice} the encoder belongs to.
+     * Return the {@link IODevice} the encoder belongs to.
      *
      * @return the encoder's device
      */
@@ -63,24 +63,45 @@ public interface Encoder {
     long getPosition();
 
     /**
-     * Returns current position of the encoder to zero.
+     * Resets the current position of the encoder to zero.
      */
     void resetPosition() throws IOException, IllegalStateException;
     
     /**
-     * Attaches an encoder to two digital pins.
+     * Attaches an encoder to two digital pins. 
      * 
-     * @param a
-     * @param b
+     * Once attached, the encoder will start sending position data
+     * 
+     * @param pinA  first pin to attach encoder to
+     * @param pinB  second pin to attach encoder to
      */
-    void attach(Pin a, Pin b) throws IOException, IllegalArgumentException, IllegalStateException;
+    void attach(Pin pinA, Pin pinB) throws IOException, IllegalArgumentException, IllegalStateException;
     
+    /**
+     * Detach an encoder from its digital pins and halt position data.
+     */
     void detach() throws IOException, IllegalStateException;
     
+    /**
+     * Determine whether encoder is attached.
+     * 
+     * @return attached state of encoder
+     */
     boolean isAttached();
     
+    /**
+     * Adds the specified listener to receive events from this encoder.
+     *
+     * @param listener the listener
+     */
     void addEventListener(EncoderEventListener listener);
 
+    /**
+     * Removes the specified listener so that it no longer receives events from
+     * this encoder.
+     *
+     * @param listener the listener
+     */
     void removeEventListener(EncoderEventListener listener);
 
 }

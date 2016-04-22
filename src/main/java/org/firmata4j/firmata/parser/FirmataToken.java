@@ -151,7 +151,7 @@ public interface FirmataToken {
     public static final int MAX_SAMPLING_INTERVAL    = 100;
     
     // encoder control
-    public static final int MAX_ENCODERS                = 5;    // hard-coded to match FirmataEncoder library
+    public static final int MAX_ENCODERS                = 5;    // hard-coded to match FirmataEncoder library for now
     public static final byte ENCODER_ATTACH             = 0x00; // attach encoder to pins. No response
     public static final byte ENCODER_REPORT_POSITION    = 0x01; // report single encoder position. Expects response
     public static final byte ENCODER_REPORT_POSITIONS   = 0x02; // report all encoder positions. Expects response. NOT USED YET

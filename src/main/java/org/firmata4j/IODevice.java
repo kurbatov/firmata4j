@@ -88,6 +88,12 @@ public interface IODevice {
      */
     public Set<Pin> getPins();
     
+    /**
+     * Returns a set of encoders for the device.
+     *
+     * @return set of device's encoders
+     * @see Encoder
+     */
     public Set<Encoder> getEncoders();
 
     /**
@@ -97,6 +103,11 @@ public interface IODevice {
      */
     public int getPinsCount();
     
+    /**
+     * Returns count of available encoders for the device.
+     *
+     * @return count of encoders or zero if encoders are not supported.
+     */
     public int getEncoderCount();
 
     /**
@@ -108,6 +119,13 @@ public interface IODevice {
      */
     public Pin getPin(int index);
     
+    /**
+     * Returns a encoder by its index on device. The index should be less than
+     * result returned by {@link #getEncoderCount()}.
+     *
+     * @param index index of the encoder
+     * @return the encoder
+     */
     public Encoder getEncoder(int index);
 
     /**

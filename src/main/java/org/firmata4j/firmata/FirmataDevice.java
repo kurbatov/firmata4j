@@ -278,6 +278,12 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
     }
     
+    /**
+     * Notifies the device listeners that an encoder has changed.<br>
+     * This method is package-wide accessible to be used by {@link FirmataEncoder}.
+     *
+     * @param event the event to be send to the listeners
+     */
     void encoderChanged(IOEvent event) {
         for (IODeviceEventListener listener : listeners) {
             listener.onEncoderChange(event);

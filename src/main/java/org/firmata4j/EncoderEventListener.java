@@ -28,13 +28,13 @@ package org.firmata4j;
  * The listener interface for receiving events from {@link Encoder}. When encoder's
  * position changes, the relevant method in the listener object is invoked.
  *
- * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
+ * @author Jeffrey Kuhn &lt;drjrkuhn@gmail.com&gt;
  */
 public interface EncoderEventListener {
     
     /**
      * Invoked when encoder's position changes.
-     * @param event 
+     * @param event encodes the encoder number and new position
      */
     public void onPositionChange(IOEvent event);
 

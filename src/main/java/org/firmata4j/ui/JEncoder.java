@@ -45,7 +45,7 @@ import org.firmata4j.IOEvent;
 import org.firmata4j.Pin;
 
 /**
- * Displays representation of an {@link Encoder}.<br/>
+ * Displays representation of an {@link Encoder}.
  *
  * @author Jeffrey Kuhn &lt;drjrkuhn@gmail.com&gt;
  */

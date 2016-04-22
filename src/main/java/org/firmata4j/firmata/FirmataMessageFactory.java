@@ -284,27 +284,59 @@ public class FirmataMessageFactory {
         };
     }
     
+    /**
+     * Builds an encoder attach message.
+     *
+     * @param encoderId index of the encoder to attach
+     * @param pinAId index of the first pin to attach to the encoder
+     * @param pinBId index of the second pin to attach to the encoder
+     * @return Firmata SysEx message
+     */
     public static byte[] encoderAttach(byte encoderId, byte pinAId, byte pinBId) {
         return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_ATTACH,
             encoderId, pinAId, pinBId, END_SYSEX
         };
     }
     
+    /**
+     * Builds an encoder report position request message.
+     *
+     * @param encoderId index of the encoder to report
+     * @return Firmata SysEx message
+     */
     public static byte[] encoderReportPosition(byte encoderId) {
         return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_REPORT_POSITION,
             encoderId, END_SYSEX};
     }
     
+    /**
+     * Builds an encoder reset position request message.
+     *
+     * @param encoderId index of the encoder to reset
+     * @return Firmata SysEx message
+     */
     public static byte[] encoderResetPosition(byte encoderId) {
         return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_RESET_POSITION,
             encoderId, END_SYSEX};
     }
     
+    /**
+     * Builds an encoder auto report position request message.
+     *
+     * @param enable enables auto-reporting once per sampling interval if true
+     * @return Firmata SysEx message
+     */
     public static byte[] encoderReport(boolean enable) {
         return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_REPORT_AUTO,
             (byte) (enable ? 1 : 0), END_SYSEX};
     }
     
+    /**
+     * Builds an encoder detach message.
+     *
+     * @param encoderId index of the encoder to detach
+     * @return Firmata SysEx message
+     */
     public static byte[] encoderDetach(byte encoderId) {
         return new byte[]{START_SYSEX, ENCODER_DATA, ENCODER_DETACH,
             encoderId, END_SYSEX

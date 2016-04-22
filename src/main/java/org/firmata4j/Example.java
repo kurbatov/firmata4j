@@ -58,6 +58,7 @@ public class Example {
     private static final JFrame INITIALIZATION_FRAME = new JFrame();
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        // Uncomment to trace communications
         //System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
         
         try { // set look and feel

@@ -31,13 +31,13 @@ import java.util.Set;
 import org.firmata4j.EncoderEventListener;
 import org.firmata4j.IOEvent;
 import org.firmata4j.Pin;
-import org.firmata4j.PinEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class contains implementation of Firmata encoder.
  *
- * @author jrkuhn
+ * @author Jeffrey Kuhn &lt;drjrkuhn@gmail.com&gt;
  */
 public class FirmataEncoder implements Encoder {
 
@@ -48,6 +48,12 @@ public class FirmataEncoder implements Encoder {
     private volatile boolean attached;
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
+    /**
+     * Constructs a Firmata encoder for the specified device.
+     *
+     * @param device the device the encoder belongs to
+     * @param index the index of encoder on the device
+     */
     FirmataEncoder(FirmataDevice device, byte index) {
         this.device = device;
         this.encoderId = index;
