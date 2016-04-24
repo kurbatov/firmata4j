@@ -151,6 +151,13 @@ public interface IODevice {
     public String getProtocol();
     
     /**
+     * Sets the sampling interval in msec
+     * 
+     * @param msec Time between auto-samples in milliseconds
+     */
+    public void setSamplingInterval(int msec) throws IOException;
+    
+    /**
      * Sends arbitrary message to device.
      * 
      * @param message the message

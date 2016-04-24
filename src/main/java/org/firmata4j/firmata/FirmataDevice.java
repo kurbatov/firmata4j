@@ -309,6 +309,11 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         }
     }
 
+    @Override
+    public void setSamplingInterval(int msec) throws IOException {
+        sendMessage(FirmataMessageFactory.setSamplingInterval(msec));
+    }
+
     /**
      * Initializes the I2C Pins before the I2C interface can be used.
      * @throws IOException
