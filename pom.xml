@@ -26,8 +26,8 @@
         <url>https://github.com/kurbatov/firmata4j</url>
         <connection>scm:git:git@github.com:kurbatov/firmata4j.git</connection>
         <developerConnection>scm:git:git@github.com:kurbatov/firmata4j.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -141,6 +141,9 @@
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                                <configuration>
+                                    <additionalparam>-Xdoclint:none</additionalparam>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
