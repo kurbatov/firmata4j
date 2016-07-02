@@ -18,7 +18,7 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.2</version>
+    <version>2.3.3</version>
 </dependency>
 ```
 
@@ -26,16 +26,19 @@ Add the following dependency to `pom.xml` of your project:
 General scenario of usage is following:
 ```java
 IODevice device = new FirmataDevice("/dev/ttyUSB0"); // construct the Firmata device instance using the name of a port
+// subscribe to events using device.addEventListener(...);
+// and/or device.getPin(n).addEventListener(...);
 device.start(); // initiate communication to the device
 device.ensureInitializationIsDone(); // wait for initialization is done
 // do actual work here
 device.stop(); // stop communication to the device
 ```
 
-The "actual work" consists in sending commands to the board and processing
-events that occur on it.
+The "actual work" consists in sending commands to the board. Registered
+listeners process events of the device asynchronously. You can add and
+remove listeners along the way.
 
-To react to events we have to subscribe listeners of the device or its pins.
+You can subscribe to events of the device or its pin.
 
 ```java
 device.addEventListener(new IODeviceEventListener() {
@@ -72,7 +75,7 @@ device.addEventListener(new IODeviceEventListener() {
 });
 ```
 
-To obtain more fine grained control we can subscribe to events of a particular
+To obtain more fine grained control you can subscribe to events of a particular
 pin.
 
 ```java
@@ -90,7 +93,7 @@ pin.addEventListener(new PinEventListener() {
 });
 ```
 
-Changing the mode and value of a pin look like this:
+You can change the mode and value of a pin:
 
 ```java
 pin.setMode(Pin.Mode.OUTPUT); // our listeners will get event about this change
@@ -139,9 +142,6 @@ You can update it using the guide on
 
 ## I2C
 Currently **firmata4j** does not support working with I2C installations.
-I have no idea how to implement that because I haven't dealt with it in my
-applications. If you need this functionality and got an idea how that should be
-done, please, share it.
 
 ## Contributing
 Contributions are welcome. If you discover a bug or would like to propose a new
