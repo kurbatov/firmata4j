@@ -54,7 +54,7 @@ public interface I2CDevice {
      * @throws IOException when the data cannot be sent due to communication
      * fail
      */
-    public void tell(byte[] data) throws IOException;
+    public void tell(byte... data) throws IOException;
 
     /**
      * Requests data from I2C device and receives it only once. Specified

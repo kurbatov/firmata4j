@@ -70,7 +70,7 @@ public class FirmataI2CDevice implements I2CDevice {
     }
 
     @Override
-    public void tell(byte[] data) throws IOException {
+    public void tell(byte... data) throws IOException {
         masterDevice.sendMessage(FirmataMessageFactory.i2cWriteRequest(address, data));
     }
 

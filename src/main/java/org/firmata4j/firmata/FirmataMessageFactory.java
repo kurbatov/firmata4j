@@ -82,7 +82,7 @@ public class FirmataMessageFactory {
      * @param bytesToWrite data to send to the slaveAdderss
      * @return the message
      */
-    public static byte[] i2cWriteRequest(byte slaveAddress, byte[] bytesToWrite) {
+    public static byte[] i2cWriteRequest(byte slaveAddress, byte... bytesToWrite) {
         byte[] result = new byte[bytesToWrite.length * 2 + 5];
         result[0] = START_SYSEX;
         result[1] = I2C_REQUEST;
