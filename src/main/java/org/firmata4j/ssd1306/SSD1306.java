@@ -155,6 +155,11 @@ public class SSD1306 {
     public void invertDisplay(boolean inverted) {
         command(setDisplayInverse(inverted));
     }
+    
+    public void clear() {
+        getCanvas().clear();
+        display();
+    }
 
     /**
      * Dims the display

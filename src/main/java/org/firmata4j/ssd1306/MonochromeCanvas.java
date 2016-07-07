@@ -146,6 +146,10 @@ public class MonochromeCanvas {
             }
         }
     }
+    
+    public void drawLine(int fromX, int fromY, int toX, int toY) {
+        drawLine(fromX, fromY, toX, toY, color);
+    }
 
     public void drawVerticalLine(int x, int y, int h, Color color) {
         drawLine(x, y, x, y + h - 1, color);
@@ -162,11 +166,19 @@ public class MonochromeCanvas {
         drawVerticalLine(x, y, h, color);
         drawVerticalLine(x + w - 1, y, h, color);
     }
+    
+    public void drawRect(int x, int y, int w, int h) {
+        drawRect(x, y, w, h, color);
+    }
 
     public void fillRect(int x, int y, int w, int h, Color color) {
         for (int i = x; i < x + w; i++) {
             drawVerticalLine(i, y, h, color);
         }
+    }
+    
+    public void fillRect(int x, int y, int w, int h) {
+        fillRect(x, y, w, h, color);
     }
 
     public void fillScreen(Color color) {
@@ -201,6 +213,10 @@ public class MonochromeCanvas {
             setPixel(centerX + y, centerY - x, color);
             setPixel(centerX - y, centerY - x, color);
         }
+    }
+    
+    public void drawCircle(int centerX, int centerY, int r) {
+        drawCircle(centerX, centerY, r, color);
     }
 
     public void drawCircleHelper(int centerX, int centerY, int r, int cornername, Color color) {
@@ -605,6 +621,14 @@ public class MonochromeCanvas {
 
     public byte[] getBuffer() {
         return Arrays.copyOf(buffer, buffer.length);
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     private byte[][] convertToBitmap(BufferedImage image, boolean invert) {
