@@ -1,7 +1,7 @@
 ## firmata4j
-**firmata4j** is a client library of [Firmata](http://www.firmata.org/) written
-in Java. The library allows controlling Arduino (or another
-board) which runs Firmata protocol from your java program.
+**firmata4j** is a client library of [Firmata](https://github.com/firmata/protocol)
+written in Java. The library allows controlling Arduino (or another board) which
+runs Firmata protocol from your java program.
 
 ## Capabilities
 - Interaction with a board and its pins in object-oriented style
@@ -19,7 +19,7 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.3</version>
+    <version>2.3.4</version>
 </dependency>
 ```
 
