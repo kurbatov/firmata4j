@@ -21,13 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package org.firmata4j.firmata;
 
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+import org.firmata4j.I2CDevice;
 import org.firmata4j.IODevice;
 import org.firmata4j.IODeviceEventListener;
 import org.firmata4j.IOEvent;
@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,6 +72,8 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean ready = new AtomicBoolean(false);
     private final AtomicInteger initializedPins = new AtomicInteger(0);
+    private final AtomicInteger longestI2CDelay = new AtomicInteger(0);
+    private final Map<Byte, FirmataI2CDevice> i2cDevices = new HashMap<>();
     private volatile Map<String, Object> firmwareInfo;
     private volatile Map<Integer, Integer> analogMapping;
     private static final long TIMEOUT = 15000L;
@@ -78,6 +81,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
 
     /**
      * Constructs FirmataDevice instance on specified port.
+     *
      * @param portName the port name the device is connected to
      */
     public FirmataDevice(String portName) {
@@ -203,6 +207,15 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     @Override
+    public synchronized I2CDevice getI2CDevice(byte address) throws IOException {
+        if (!i2cDevices.containsKey(address)) {
+            i2cDevices.put(address, new FirmataI2CDevice(this, address));
+        }
+        sendMessage(FirmataMessageFactory.i2cConfigRequest(longestI2CDelay.get()));
+        return i2cDevices.get(address);
+    }
+
+    @Override
     public String getProtocol() {
         return MessageFormat.format(
                 "{0} - {1}.{2}",
@@ -214,7 +227,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     @Override
     public void sendMessage(String message) throws IOException {
         if (message.length() > 15) {
-            LOGGER.warn("Firmata 2.3.6 implementation has input buffer only 32 bytes so you can safely send only 15 characters log messages"); 
+            LOGGER.warn("Firmata 2.3.6 implementation has input buffer only 32 bytes so you can safely send only 15 characters log messages");
         }
         sendMessage(FirmataMessageFactory.stringMessage(message));
     }
@@ -261,6 +274,27 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     /**
+     * Sets delay between the moment an I2C device's register is written to and
+     * the moment when the data can be read from that register. The delay is set
+     * per firmata-device (not per I2C device). So firmata-device uses the
+     * longest delay.
+     *
+     * @param delay
+     * @throws IOException when sending of configuration to firmata-device
+     * failed
+     */
+    void setI2CDelay(int delay) throws IOException {
+        byte[] message = FirmataMessageFactory.i2cConfigRequest(delay);
+        int longestDelaySoFar = longestI2CDelay.get();
+        while (longestDelaySoFar < delay) {
+            if (longestI2CDelay.compareAndSet(longestDelaySoFar, delay)) {
+                sendMessage(message);
+            }
+            longestDelaySoFar = longestI2CDelay.get();
+        }
+    }
+
+    /**
      * Tries to release all resources and properly terminate the connection to
      * the hardware.
      *
@@ -279,54 +313,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     /**
-     * Initializes the I2C Pins before the I2C interface can be used.
-     * @throws IOException
-     */
-    public void initI2C() throws IOException {
-        this.initI2C(0);
-    }
-
-    /**
-     * The I2C Pins must be initialized before the I2C interface can be used
-     * @param delayInMicroseconds amount of time in microseconds that the device will wait
-     *                            before sending a reply to a read request. Start a zero and adjust it if
-     *                            there are problems reading the response;
-     */
-    Integer i2cDelay;
-    public void initI2C(int delayInMicroseconds) throws IOException {
-        if(delayInMicroseconds > 255){
-            throw new IllegalArgumentException("delayInMicroseconds cannot be greater then 255 microseconds.");
-        }
-        this.i2cDelay = delayInMicroseconds;
-        sendMessage(FirmataMessageFactory.i2CConfigRequest(delayInMicroseconds));
-
-    }
-
-
-    public void requestI2CData( byte slaveAddress, byte slaveRegister, byte byteCount, boolean continuous ) throws IOException {
-        if(this.i2cDelay == null){
-            throw new IllegalArgumentException("Initalize i2c with initI2C() before calling this method.");
-        }
-
-        try {
-            sendMessage(FirmataMessageFactory.i2CReadRequest(slaveAddress, slaveRegister, byteCount, continuous));
-        } catch (IOException e) {
-            throw new IOException("Cannot request i2c data from device.", e);
-        }
-    }
-
-    public void writeI2CData( byte slaveAddress,  byte[] data ) throws IOException {
-        if(this.i2cDelay == null){
-            throw new IllegalArgumentException("Initialize i2c with initI2C() before calling this method.");
-        }
-        try {
-            sendMessage(FirmataMessageFactory.i2CWriteRequest(slaveAddress, data));
-        } catch (IOException e) {
-            throw new IOException("Cannot write i2c data to device.", e);
-        }
-    }
-
-    /**
      * Describes reaction to protocol receiving.
      *
      * @param event the event of receiving protocol version
@@ -335,20 +321,20 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
             LOGGER.error(
                     MessageFormat.format(
-                    "Current version of firmata protocol on device ({0}.{1}) is not compatible with version of fimata4j ({2}.{3}).",
-                    event.getBodyItem(PROTOCOL_MAJOR),
-                    event.getBodyItem(PROTOCOL_MINOR),
-                    FIRMATA_MAJOR_VERSION,
-                    FIRMATA_MINOR_VERSION));
+                            "Current version of firmata protocol on device ({0}.{1}) is not compatible with version of fimata4j ({2}.{3}).",
+                            event.getBodyItem(PROTOCOL_MAJOR),
+                            event.getBodyItem(PROTOCOL_MINOR),
+                            FIRMATA_MAJOR_VERSION,
+                            FIRMATA_MINOR_VERSION));
         } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
             LOGGER.warn(
                     MessageFormat.format(
-                    "Current version of firmata protocol on device ({0}.{1}) differs from version supported by frimata4j ({2}.{3})."
-                    + " Though these are compatible you may experience some issues.",
-                    event.getBodyItem(PROTOCOL_MAJOR),
-                    event.getBodyItem(PROTOCOL_MINOR),
-                    FIRMATA_MAJOR_VERSION,
-                    FIRMATA_MINOR_VERSION));
+                            "Current version of firmata protocol on device ({0}.{1}) differs from version supported by frimata4j ({2}.{3})."
+                            + " Though these are compatible you may experience some issues.",
+                            event.getBodyItem(PROTOCOL_MAJOR),
+                            event.getBodyItem(PROTOCOL_MINOR),
+                            FIRMATA_MAJOR_VERSION,
+                            FIRMATA_MINOR_VERSION));
         }
     }
 
@@ -471,29 +457,13 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     }
 
     private void onI2cMessageReceive(Event event) {
-        LOGGER.info("Recevied I2C Response " + event);
-        byte[] messageDouble = (byte[]) event.getBodyItem(I2C_MESSAGE);
-        byte[] message = convertI2CBuffer(messageDouble);
-        byte[] values = new byte[message.length-2];
-        System.arraycopy(message, 2, values, 0, message.length-2);
-        byte slaveAddress = message[0];
-        byte register = message[1];
-        IOEvent evt = new IOEvent(this,true);// An I2C Event
-        for (IODeviceEventListener listener : listeners) {
-            listener.onI2cMessageReceive(evt,slaveAddress,register,values);
+        byte address = (Byte) event.getBodyItem(I2C_ADDRESS);
+        byte register = (Byte) event.getBodyItem(I2C_REGISTER);
+        byte[] message = (byte[]) event.getBodyItem(I2C_MESSAGE);
+        FirmataI2CDevice device = i2cDevices.get(address);
+        if (device != null) {
+            device.onReceive(register, message);
         }
-
-    }
-
-    private byte[] convertI2CBuffer(byte[] byteBuffer){
-        int outSize = new Double(Math.floor(byteBuffer.length / 2)).intValue();
-        byte[] outBuffer = new byte[outSize];
-        int outIndex = 0;
-        for(int index=0;index < byteBuffer.length;index=index+2){
-            outBuffer[outIndex] = (byte)(((byteBuffer[index+1] << 7) & 0x80) | (byteBuffer[index] & 0x7F));
-            outIndex++;
-        }
-        return outBuffer;
     }
 
     private void onStringMessageReceive(Event event) {
@@ -503,7 +473,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             listener.onMessageReceive(evt, message);
         }
     }
-    
+
     private class FirmataParser extends FiniteStateMachine implements Runnable {
 
         private final BlockingQueue<byte[]> queue;
@@ -512,7 +482,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             super(WaitingForMessageState.class);
             this.queue = queue;
         }
-        
+
         @Override
         public void onEvent(Event event) {
             LOGGER.debug("Event name: {}, type: {}, timestamp: {}", new Object[]{event.getName(), event.getType(), event.getTimestamp()});
@@ -556,7 +526,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
 
         @Override
         public void run() {
-            while(!Thread.interrupted()) {
+            while (!Thread.interrupted()) {
                 try {
                     process(queue.take());
                 } catch (InterruptedException ex) {
@@ -565,7 +535,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                 }
             }
         }
-        
+
     }
-    
+
 }

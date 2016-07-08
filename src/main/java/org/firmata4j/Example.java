@@ -67,7 +67,12 @@ public class Example {
         final IODevice device = new FirmataDevice(port);
         showInitializationMessage();
         device.start();
-        device.ensureInitializationIsDone();
+        try {
+            device.ensureInitializationIsDone();
+        } catch (InterruptedException e) {
+            JOptionPane.showMessageDialog(INITIALIZATION_FRAME, e.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
         hideInitializationWindow();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -132,7 +137,7 @@ public class Example {
                 public void run() {
                     JFrame frame = INITIALIZATION_FRAME;
                     frame.setUndecorated(true);
-                    JLabel label = new JLabel("Connecting to the device");
+                    JLabel label = new JLabel("Connecting to device");
                     label.setHorizontalAlignment(JLabel.CENTER);
                     frame.add(label);
                     frame.pack();

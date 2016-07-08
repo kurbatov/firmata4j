@@ -106,7 +106,6 @@ public interface FirmataToken {
     public static final byte ONEWIRE_DATA            = 0x73; // send an OneWire read/write/reset/select/skip/search request
     public static final byte SHIFT_DATA              = 0x75; // a bitstream to/from a shift register
     public static final byte I2C_REQUEST             = 0x76; // send an I2C read/write request
-    public static final byte LCD_REQUEST             = 0x62;
     public static final byte I2C_REPLY               = 0x77; // a reply to an I2C read request
     public static final byte I2C_CONFIG              = 0x78; // config I2C settings such as delay times and power pins
     public static final byte EXTENDED_ANALOG         = 0x6F; // analog write (PWM, Servo, etc) to any pin
@@ -143,10 +142,6 @@ public interface FirmataToken {
     public static final byte I2C_READ_CONTINUOUS      = 0X10;
     public static final byte I2C_STOP_READ_CONTINUOUS = 0X18;
 
-    public static final byte LCD_SETCURSOR               = 0X00;
-    public static final byte LCD_PRINT                   = 0X01;
-    public static final byte LCD_BACKLIGHT               = 0X02;
-
     public static final int MIN_SAMPLING_INTERVAL    = 10;
     public static final int MAX_SAMPLING_INTERVAL    = 100;
 
@@ -168,6 +163,8 @@ public interface FirmataToken {
     public static final String ANALOG_MESSAGE_RESPONSE = "analogMessage";
     public static final String DIGITAL_MESSAGE_RESPONSE = "digitalMessage";
     public static final String I2C_MESSAGE = "i2cMessage";
+    public static final String I2C_ADDRESS = "i2cAddress";
+    public static final String I2C_REGISTER = "i2cRegister";
 
     public static final String PIN_CAPABILITIES_MESSAGE = "pinCapabilities";
     public static final String PIN_STATE = "pinState";

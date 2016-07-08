@@ -8,6 +8,7 @@ board) which runs Firmata protocol from your java program.
 - Abstraction over details of the protocol
 - Provides an UI component that visualize the current state of every pin and
 allows changing a mode and state of each of those
+- Allows communicating with I2C devices
 
 ## Installation
 
@@ -116,6 +117,22 @@ the pin. State of the output pin can be changed by double clicking on it.
 An example of `JPinboard` usage can be found in
 [`org.firmata4j.Example` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
 
+## I2C
+**firmata4j** supports working with I2C devices. You can obtain a reference to
+an I2C device in this way:
+
+```java
+IODevice device = new FirmataDevice(port);
+...
+byte i2cAddress = 0x3C;
+I2CDevice i2cDevice = device.getI2CDevice(i2cAddress);
+```
+
+You may find convenient writing a wrapper for [`I2CDevice` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CDevice.java)
+to facilitate communication with I2C device. Consider [`I2CExample`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CExample.java)
+and [`SSD1306`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/ssd1306/SSD1306.java)
+classes as an example of that approach.
+
 ## Versions
 **firmata4j** sticks to Firmata protocol versions. The first available version
 of **firmata4j** is 2.3.1.
@@ -139,9 +156,6 @@ upload it as follows:
 Arduino IDE may contain an outdated version of Firmata.
 You can update it using the guide on
 [this page](https://github.com/firmata/arduino).
-
-## I2C
-Currently **firmata4j** does not support working with I2C installations.
 
 ## Contributing
 Contributions are welcome. If you discover a bug or would like to propose a new
