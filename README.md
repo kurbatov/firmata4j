@@ -1,3 +1,5 @@
+[![Get help on Codementor](https://cdn.codementor.io/badges/get_help_github.svg)](https://www.codementor.io/olegkurbatov?utm_source=github&utm_medium=button&utm_term=olegkurbatov&utm_campaign=github)
+
 ## firmata4j
 **firmata4j** is a client library of [Firmata](https://github.com/firmata/protocol)
 written in Java. The library allows controlling Arduino (or another board) which
