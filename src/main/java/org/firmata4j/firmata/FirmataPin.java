@@ -124,7 +124,7 @@ public class FirmataPin implements Pin {
             byte pinInPort = (byte) (pinId % 8);
             byte portValue = 0;
             for (int i = 0; i < 8; i++) {
-                Pin p = device.getPin(portId + i);
+                Pin p = device.getPin(portId * 8 + i);
                 if (p.getMode() == Mode.OUTPUT && p.getValue() > 0) {
                     portValue |= 1 << i;
                 }
