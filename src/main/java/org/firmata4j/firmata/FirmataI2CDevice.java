@@ -76,10 +76,10 @@ public class FirmataI2CDevice implements I2CDevice {
 
     @Override
     public void ask(byte responseLength, I2CListener listener) throws IOException {
-        byte reg = (byte) register.getAndIncrement();
+        int reg = register.getAndIncrement();
         register.compareAndSet(256, 1);
         callbacks[reg - 1] = listener;
-        masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, reg, responseLength, false));
+        masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, (byte) reg, responseLength, false));
     }
 
     @Override
@@ -117,8 +117,9 @@ public class FirmataI2CDevice implements I2CDevice {
      */
     void onReceive(byte register, byte[] message) {
         I2CEvent evt = new I2CEvent(this, message);
-        if (register > 0) {
-            callbacks[register - 1].onReceive(evt);
+        int reg = 0xFF & register;
+        if (reg > 0) {
+            callbacks[reg - 1].onReceive(evt);
         } else {
             Set<I2CListener> notificationSet = new HashSet<>(subscribers);
             for (I2CListener listener : notificationSet) {
