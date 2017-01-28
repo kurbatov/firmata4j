@@ -77,6 +77,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
     private volatile Map<String, Object> firmwareInfo;
     private volatile Map<Integer, Integer> analogMapping;
     private static final long TIMEOUT = 15000L;
+    private static final int DELAY = 15;
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
     /**
@@ -527,8 +528,13 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         @Override
         public void run() {
             while (!Thread.interrupted()) {
-                try {
+                try 
+                {
                     process(queue.take());
+                    if (!isReady())
+                    {
+                        Thread.sleep(DELAY);
+                    }
                 } catch (InterruptedException ex) {
                     LOGGER.info("FirmataParser has stopped");
                     return;
