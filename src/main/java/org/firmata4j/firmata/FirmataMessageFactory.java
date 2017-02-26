@@ -104,14 +104,12 @@ public class FirmataMessageFactory {
      * device. <b>Does not support 10-bit mode.</b>
      *
      * @param slaveAddress address of the I2C device you want to talk to
-     * @param slaveRegister The slave register will act as a tag on your
-     * returned data enabling you to identify the matching returned message to
-     * the request.
+     * @param register The device register to read from.
      * @param bytesToRead the number of bytes that the device will return
      * @param continuous repeatedly send updates until asked to stop
      * @return the message
      */
-    public static byte[] i2cReadRequest(byte slaveAddress, byte slaveRegister, int bytesToRead, boolean continuous) {
+    public static byte[] i2cReadRequest(byte slaveAddress, int register, int bytesToRead, boolean continuous) {
         byte command;
         byte[] message;
         if (continuous) {
@@ -121,7 +119,7 @@ public class FirmataMessageFactory {
         }
         //TODO replace hardcoded slave address (MSB) with generated one to support 10-bit mode
         // see https://github.com/firmata/protocol/blob/master/i2c.md
-        if (slaveRegister == 0) {
+        if (register == FirmataI2CDevice.REGISTER_NOT_SET) {
             message = new byte[]{
                 START_SYSEX, I2C_REQUEST,
                 slaveAddress, command,
@@ -132,7 +130,7 @@ public class FirmataMessageFactory {
             message = new byte[]{
                 START_SYSEX, I2C_REQUEST,
                 slaveAddress, command,
-                (byte) (slaveRegister & 0x7F), (byte) ((slaveRegister >>> 7) & 0x7F),
+                (byte) (register & 0x7F), (byte) ((register >>> 7) & 0x7F),
                 (byte) (bytesToRead & 0x7F), (byte) ((bytesToRead >>> 7) & 0x7F),
                 END_SYSEX
             };

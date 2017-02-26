@@ -24,6 +24,8 @@
 
 package org.firmata4j;
 
+import java.util.Arrays;
+
 /**
  * This event occurs when I2C device transmits some data. {@link I2CListener}
  * processes this kind of events.
@@ -33,10 +35,12 @@ package org.firmata4j;
 public class I2CEvent {
 
     private final I2CDevice device;
+    private final int register;
     private final byte[] data;
 
-    public I2CEvent(I2CDevice device, byte[] data) {
+    public I2CEvent(I2CDevice device, int register, byte[] data) {
         this.device = device;
+        this.register = register;
         this.data = data;
     }
 
@@ -48,10 +52,21 @@ public class I2CEvent {
     }
 
     /**
+     * Returns register address received from {@link I2CDevice}.
+     */
+    public int getRegister() {
+        return register;
+    }
+
+    /**
      * Returns {@link I2CDevice} which sent a piece of data.
      */
     public I2CDevice getDevice() {
         return device;
     }
 
+	@Override
+	public String toString() {
+		return "I2CEvent [device=" + device + ", register=0x" + Integer.toHexString(register) + ", data=" + Arrays.toString(data) + "]";
+	}
 }

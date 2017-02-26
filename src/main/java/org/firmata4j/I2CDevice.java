@@ -68,6 +68,18 @@ public interface I2CDevice {
     public void ask(byte responseLength, I2CListener listener) throws IOException;
 
     /**
+     * Requests data from I2C device and receives it only once. Specified
+     * listener is exclusive processor of the received data.
+     * 
+     * @param register Device register to read from.
+     * @param responseLength length of expected response
+     * @param listener processor of the response
+     * @throws IOException when I2C device cannot be asked for data due to 
+     * communication fail
+     */
+    public void ask(int register, byte responseLength, I2CListener listener) throws IOException;
+
+    /**
      * Registers a listener as a receiver of regular updates from I2C device.
      * <br/>
      * The listener starts receiving updates after
