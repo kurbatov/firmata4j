@@ -23,38 +23,25 @@
  */
 package org.firmata4j.firmata;
 
-import jssc.SerialPort;
-import jssc.SerialPortEvent;
-import jssc.SerialPortEventListener;
-import jssc.SerialPortException;
-import org.firmata4j.I2CDevice;
-import org.firmata4j.IODevice;
-import org.firmata4j.IODeviceEventListener;
-import org.firmata4j.IOEvent;
-import org.firmata4j.Pin;
+import static org.firmata4j.firmata.parser.FirmataToken.*;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.firmata4j.*;
+import org.firmata4j.firmata.parser.FirmataToken;
 import org.firmata4j.firmata.parser.WaitingForMessageState;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.firmata4j.firmata.parser.FirmataToken;
-
-import static org.firmata4j.firmata.parser.FirmataToken.*;
+import jssc.*;
 
 /**
  * Implements {@link IODevice} that is using Firmata protocol.
@@ -459,7 +446,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
 
     private void onI2cMessageReceive(Event event) {
         byte address = (Byte) event.getBodyItem(I2C_ADDRESS);
-        byte register = (Byte) event.getBodyItem(I2C_REGISTER);
+        int register = (Integer) event.getBodyItem(I2C_REGISTER);
         byte[] message = (byte[]) event.getBodyItem(I2C_MESSAGE);
         FirmataI2CDevice device = i2cDevices.get(address);
         if (device != null) {

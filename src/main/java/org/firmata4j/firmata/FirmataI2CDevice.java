@@ -25,11 +25,9 @@
 package org.firmata4j.firmata;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+
 import org.firmata4j.I2CDevice;
 import org.firmata4j.I2CEvent;
 import org.firmata4j.I2CListener;
@@ -41,16 +39,15 @@ import org.firmata4j.I2CListener;
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
 public class FirmataI2CDevice implements I2CDevice {
+	public static final int REGISTER_NOT_SET = -1;
 
     private final FirmataDevice masterDevice;
 
     private final byte address;
 
-    private final AtomicInteger register = new AtomicInteger(1);
-
     private final AtomicBoolean receivingUpdates = new AtomicBoolean(false);
 
-    private final I2CListener[] callbacks = new I2CListener[256];
+    private final Map<Integer, I2CListener> callbacks = new HashMap<>();
 
     private final Set<I2CListener> subscribers = Collections.synchronizedSet(new HashSet<I2CListener>());
 
@@ -76,10 +73,13 @@ public class FirmataI2CDevice implements I2CDevice {
 
     @Override
     public void ask(byte responseLength, I2CListener listener) throws IOException {
-        int reg = register.getAndIncrement();
-        register.compareAndSet(256, 1);
-        callbacks[reg - 1] = listener;
-        masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, (byte) reg, responseLength, false));
+    	ask(-1, responseLength, listener);
+    }
+    
+    @Override
+	public void ask(int register, byte responseLength, I2CListener listener) throws IOException {
+        callbacks.put(Integer.valueOf(register), listener);
+        masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, register, responseLength, false));
     }
 
     @Override
@@ -106,20 +106,18 @@ public class FirmataI2CDevice implements I2CDevice {
         }
     }
 
-    /**
-     * {@link FirmataDevice} calls this method when receives a message from I2C
-     * device.
-     * 
-     * @param register The register acts as a tag on returned data helping to 
-     * identify the matching returned message to the request. Continuous updates
-     * are received with 0 register.
-     * @param message actual data from I2C device
-     */
-    void onReceive(byte register, byte[] message) {
-        I2CEvent evt = new I2CEvent(this, message);
-        int reg = 0xFF & register;
-        if (reg > 0) {
-            callbacks[reg - 1].onReceive(evt);
+	/**
+	 * {@link FirmataDevice} calls this method when receives a message from I2C
+	 * device.
+	 * 
+	 * @param register The device register read from.
+	 * @param message actual data from I2C device
+	 */
+    void onReceive(int register, byte[] message) {
+        I2CEvent evt = new I2CEvent(this, register, message);
+        I2CListener cb_listener = callbacks.get(Integer.valueOf(register));
+        if (cb_listener != null) {
+        	cb_listener.onReceive(evt);
         } else {
             Set<I2CListener> notificationSet = new HashSet<>(subscribers);
             for (I2CListener listener : notificationSet) {
@@ -127,5 +125,10 @@ public class FirmataI2CDevice implements I2CDevice {
             }
         }
     }
+
+	@Override
+	public String toString() {
+		return "FirmataI2CDevice [address=0x" + Integer.toHexString(address) + "]";
+	}
 
 }
