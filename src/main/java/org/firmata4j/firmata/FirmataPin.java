@@ -159,6 +159,13 @@ public class FirmataPin implements Pin {
     public void removeEventListener(PinEventListener listener) {
         listeners.remove(listener);
     }
+    
+    
+    @Override
+    public void removeAllEventListeners() {
+        listeners.clear();
+    }
+    
 
     /**
      * Adds supported mode to the pin.

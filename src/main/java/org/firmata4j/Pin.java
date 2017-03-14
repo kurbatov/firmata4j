@@ -195,5 +195,13 @@ public interface Pin {
      * @param listener the listener
      */
     public void removeEventListener(PinEventListener listener);
+    
+    
+    /**
+     * Remove all listeners from this pin.
+     *
+     */
+    public void removeAllEventListeners();
+
 
 }
