@@ -159,6 +159,12 @@ Arduino IDE may contain an outdated version of Firmata.
 You can update it using the guide on
 [this page](https://github.com/firmata/arduino).
 
+## Cases
+
+- [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
+- [Modelovanie a Riadenie Hybridných Systémov s Využitím Petriho Sietí Vyšších Úrovní](http://www.fei.stuba.sk/docs/2016/autoreferaty/autoref_Kucera.pdf)
+- [Using **firmata4j** in Closure](https://github.com/cowlike/firmata4j-samples-clojure)
+
 ## Contributing
 Contributions are welcome. If you discover a bug or would like to propose a new
 feature, please, open a new issue.
