@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.5-SNAPSHOT</version>
+    <version>2.3.5</version>
     <packaging>jar</packaging>
     <name>firmata4j</name>
     <description>firmata4j is a client library of Firmata.</description>
@@ -26,7 +26,7 @@
         <url>https://github.com/kurbatov/firmata4j</url>
         <connection>scm:git:git@github.com:kurbatov/firmata4j.git</connection>
         <developerConnection>scm:git:git@github.com:kurbatov/firmata4j.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>2.3.5</tag>
     </scm>
     
     <properties>
