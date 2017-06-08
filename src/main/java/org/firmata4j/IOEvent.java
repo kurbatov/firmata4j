@@ -42,15 +42,12 @@ public class IOEvent {
      * @param device the device that originated the event
      */
     public IOEvent(IODevice device) {
-        this.device = device;
-        this.pin = null;
-        this.value = 0;
-        this.timestamp = System.currentTimeMillis();
+        this(device, System.currentTimeMillis());
     }
 
     /**
      * Constructs the event is relevant to {@link IODevice} as a whole.
-     * <br/>
+     *
      * This constructor allows setting the timestamp of event.
      * 
      * @param device the device that originated the event
@@ -69,15 +66,12 @@ public class IOEvent {
      * @param pin the pin that originated the event
      */
     public IOEvent(Pin pin) {
-        this.device = pin.getDevice();
-        this.pin = pin;
-        this.value = pin.getValue();
-        this.timestamp = System.currentTimeMillis();
+        this(pin, System.currentTimeMillis());
     }
     
     /**
      * Constructs the event is relevant to a particular {@link Pin}.
-     * <br/>
+     *
      * This constructor allows setting the timestamp of event.
      * 
      * @param pin the pin that originated the event
@@ -112,7 +106,7 @@ public class IOEvent {
 
     /**
      * Returns the value the pin received.
-     * <br/>
+     *
      * If the event is not about pin, always returns 0.
      * 
      * @return the value the pin received
@@ -123,6 +117,7 @@ public class IOEvent {
 
     /**
      * Returns the timestamp of the event.
+     *
      * @return timestamp of the event
      */
     public long getTimestamp() {

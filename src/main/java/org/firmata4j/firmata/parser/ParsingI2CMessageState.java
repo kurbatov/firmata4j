@@ -23,11 +23,10 @@
  */
 package org.firmata4j.firmata.parser;
 
-import static org.firmata4j.firmata.parser.FirmataToken.*;
-
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
+import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
  * This class parses inbound I2C messages and publishes them when they are
@@ -58,15 +57,11 @@ public class ParsingI2CMessageState extends AbstractState {
     @Override
     public void process(byte b) {
         if (b == END_SYSEX) {
-        	byte[] buffer = getBuffer();
-            //byte[] buffer = convertI2CBuffer(getBuffer());
-            byte address = (byte) ((buffer[0] & 0x7F) | ((buffer[1] & 0x7F) << 7));
-            int register = (buffer[2] & 0x7F) | ((buffer[3] & 0x7F) << 7);
-            byte[] message = new byte[buffer.length / 2 - 2];
-            int index = 0;
-            for (int i = 4; i < buffer.length; i += 2) {
-            	message[index++] = (byte) (buffer[i] | (buffer[i + 1] << 7));
-            }
+            byte[] buffer = convertI2CBuffer(getBuffer());
+            byte address = buffer[0];
+            byte register = buffer[1];
+            byte[] message = new byte[buffer.length - 2];
+            System.arraycopy(buffer, 2, message, 0, buffer.length - 2);
             Event event = new Event(I2C_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
             event.setBodyItem(I2C_ADDRESS, address);
             event.setBodyItem(I2C_REGISTER, register);
@@ -78,16 +73,15 @@ public class ParsingI2CMessageState extends AbstractState {
         }
     }
 
-    /*
     private static byte[] convertI2CBuffer(byte[] byteBuffer) {
         int outSize = new Double(Math.floor(byteBuffer.length / 2)).intValue();
         byte[] outBuffer = new byte[outSize];
         int outIndex = 0;
         for (int index = 0; index < byteBuffer.length; index = index + 2) {
-            outBuffer[outIndex] = (byte) (((byteBuffer[index + 1] << 7) & 0x80) | (byteBuffer[index] & 0x7F));
+            outBuffer[outIndex] = (byte) (((byteBuffer[index + 1] & 0x01) << 7) | (byteBuffer[index] & 0x7F));
             outIndex++;
         }
         return outBuffer;
     }
-	*/
+
 }

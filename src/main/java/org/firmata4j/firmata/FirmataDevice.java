@@ -23,25 +23,36 @@
  */
 package org.firmata4j.firmata;
 
-import static org.firmata4j.firmata.parser.FirmataToken.*;
-
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.firmata4j.*;
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import org.firmata4j.I2CDevice;
+import org.firmata4j.IODevice;
+import org.firmata4j.IODeviceEventListener;
+import org.firmata4j.IOEvent;
+import org.firmata4j.Pin;
 import org.firmata4j.firmata.parser.FirmataToken;
 import org.firmata4j.firmata.parser.WaitingForMessageState;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jssc.*;
+import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
  * Implements {@link IODevice} that is using Firmata protocol.
@@ -95,11 +106,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
              will hear this REPORT_FIRMWARE request and send the
              response.  If this REPORT_FIRMWARE request isn't sent,
              these boards will not automatically send this info.
-
-             Arduino boards that reboot on DTR will act like a board
-             that does not reboot, if DTR is not raised when the
-             port opens.  This program attempts to avoid raising
-             DTR on windows.  (is this possible on Linux and Mac OS-X?)
 
              Either way, when we hear the REPORT_FIRMWARE reply, we
              know the board is alive and ready to communicate.
@@ -515,11 +521,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         @Override
         public void run() {
             while (!Thread.interrupted()) {
-                try 
-                {
+                try {
                     process(queue.take());
-                    if (!isReady())
-                    {
+                    if (!isReady()) {
                         Thread.sleep(DELAY);
                     }
                 } catch (InterruptedException ex) {

@@ -65,8 +65,8 @@ public class I2CEvent {
         return device;
     }
 
-	@Override
-	public String toString() {
-		return "I2CEvent [device=" + device + ", register=0x" + Integer.toHexString(register) + ", data=" + Arrays.toString(data) + "]";
-	}
+    @Override
+    public String toString() {
+        return String.format("I2CEvent [device=%s, register=0x%02X, data=%s]", device, register, Arrays.toString(data));
+    }
 }

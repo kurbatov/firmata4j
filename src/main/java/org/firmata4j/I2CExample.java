@@ -65,7 +65,7 @@ public class I2CExample {
         try { // set look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(Example.class.getName()).log(Level.SEVERE, "Cannot load system look and feel.", ex);
+            Logger.getLogger(I2CExample.class.getName()).log(Level.SEVERE, "Cannot load system look and feel.", ex);
         }
         // requesting a user to define the port name
         String port = requestPort();

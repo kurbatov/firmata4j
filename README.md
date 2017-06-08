@@ -21,7 +21,7 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.4.1</version>
+    <version>2.3.5</version>
 </dependency>
 ```
 
@@ -33,13 +33,13 @@ IODevice device = new FirmataDevice("/dev/ttyUSB0"); // construct the Firmata de
 // and/or device.getPin(n).addEventListener(...);
 device.start(); // initiate communication to the device
 device.ensureInitializationIsDone(); // wait for initialization is done
-// do actual work here
+// sending commands to the board
 device.stop(); // stop communication to the device
 ```
 
-The "actual work" consists in sending commands to the board. Registered
-listeners process events of the device asynchronously. You can add and
-remove listeners along the way.
+Sending commands to the board may cause the device to emit different events.
+Registered listeners process events of the device asynchronously. You can add
+and remove listeners along the way.
 
 You can subscribe to events of the device or its pin.
 
