@@ -9,7 +9,7 @@ runs Firmata protocol from your java program.
 - Interaction with a board and its pins in object-oriented style
 - Abstraction over details of the protocol
 - Provides an UI component that visualize the current state of every pin and
-allows changing a mode and state of each of those
+allows changing their mode and state
 - Allows communicating with I2C devices
 
 ## Installation
@@ -37,9 +37,9 @@ device.ensureInitializationIsDone(); // wait for initialization is done
 device.stop(); // stop communication to the device
 ```
 
-Sending commands to the board may cause the device to emit different events.
-Registered listeners process events of the device asynchronously. You can add
-and remove listeners along the way.
+Sending commands to the board may cause the device to emit events.
+Registered listeners process the events asynchronously. You can add and remove
+listeners along the way.
 
 You can subscribe to events of the device or its pin.
 
@@ -131,8 +131,8 @@ I2CDevice i2cDevice = device.getI2CDevice(i2cAddress);
 ```
 
 You may find convenient writing a wrapper for [`I2CDevice` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CDevice.java)
-to facilitate communication with I2C device. Consider [`I2CExample`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CExample.java)
-and [`SSD1306`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/ssd1306/SSD1306.java)
+to facilitate communication with I2C device. Consider [`SSD1306`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/ssd1306/SSD1306.java)
+and [`I2CExample`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CExample.java)
 classes as an example of that approach.
 
 ## Versions
@@ -155,10 +155,6 @@ upload it as follows:
 - Select the port in `Tools -> Port` (it is already selected if you have uploaded something to your Arduino)
 - Click on `Upload` button
 
-Arduino IDE may contain an outdated version of Firmata.
-You can update it using the guide on
-[this page](https://github.com/firmata/arduino).
-
 ## Cases
 
 - [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
@@ -167,15 +163,17 @@ You can update it using the guide on
 
 ## Contributing
 Contributions are welcome. If you discover a bug or would like to propose a new
-feature, please, open a new issue.
+feature, please, [open a new issue](https://github.com/kurbatov/firmata4j/issues/new).
 
 If you have an improvement to share, please, do the following:
 
 1. Fork this repository
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Adds some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+2. Clone your own fork to your machine (`git clone https://github.com/<your_username>/firmata4j.git`)
+3. Create a feature branch (`git checkout -b my-new-feature`)
+4. Change the code
+5. Commit the changes (`git commit -am 'Adds some feature'`)
+6. Push to the branch (`git push origin my-new-feature`)
+7. Create new Pull Request
 
 ## License
 **firmata4j** is distributed under the terms of the MIT License. See the
