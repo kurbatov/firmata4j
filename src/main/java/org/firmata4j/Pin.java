@@ -149,6 +149,15 @@ public interface Pin {
     public void setMode(Mode mode) throws IOException, IllegalArgumentException;
 
     /**
+     * 
+     * @param minPulse servo moter control pulse with [µs] on setValue(0)
+     * @param maxPulse servo moter control pulse with [µs] on setValue(180)
+     * @throws IOException when assigning is failed due a communication issue
+     * @throws IllegalArgumentException when the pin does not support the mode
+     */
+    public void setServoMode(int minPulse, int maxPulse) throws IOException, IllegalArgumentException;
+
+    /**
      * Checks if the pin supports the mode
      *
      * @param mode the mode

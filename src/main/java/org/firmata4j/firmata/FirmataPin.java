@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.firmata4j.IOEvent;
 import org.firmata4j.Pin;
 import org.firmata4j.PinEventListener;
@@ -74,11 +75,23 @@ public class FirmataPin implements Pin {
     }
 
     @Override
-    public synchronized void setMode(Mode mode) throws IOException {
+    public void setMode(Mode mode) throws IOException {
+        setMode(mode, 544, 2400); // Arduino defaults (https://www.arduino.cc/en/Reference/ServoAttach)
+    }
+
+    @Override
+    public void setServoMode(int minPulse, int maxPulse) throws IOException {
+        setMode(Mode.SERVO, minPulse, maxPulse);
+    }
+
+    private synchronized void setMode(Mode mode, int minPulse, int maxPulse) throws IOException {
         if (supports(mode)) {
             if (currentMode != mode) {
                 if (mode == Mode.SERVO) {
-                    getDevice().sendMessage(FirmataMessageFactory.servoConfig(pinId, 0, 180));
+                    getDevice().sendMessage(FirmataMessageFactory.servoConfig(pinId, minPulse, maxPulse));
+                    // The currentValue for a servo is unknown as the motor is 
+                    // send to the 1.5ms position when pinStateRequest is invoked
+                    currentValue = -1;
                 }
                 getDevice().sendMessage(FirmataMessageFactory.setMode(pinId, mode));
                 currentMode = mode;
