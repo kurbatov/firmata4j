@@ -93,12 +93,23 @@ public class FirmataI2CDevice implements I2CDevice {
     public void unsubscribe(I2CListener listener) {
         subscribers.remove(listener);
     }
-
+    
     @Override
-    public void startReceivingUpdates(byte messageLength) throws IOException {
-        if (receivingUpdates.compareAndSet(false, true)) {
-            masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, (byte) 0, messageLength, true));
+    public boolean startReceivingUpdates(int register, byte messageLength) throws IOException {
+        boolean result = receivingUpdates.compareAndSet(false, true);
+        if (result) {
+            masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, register, messageLength, true));
         }
+        return result;
+    }
+    
+    @Override
+    public boolean startReceivingUpdates(byte messageLength) throws IOException {
+        boolean result = receivingUpdates.compareAndSet(false, true);
+        if (result) {
+            masterDevice.sendMessage(FirmataMessageFactory.i2cReadRequest(address, REGISTER_NOT_SET, messageLength, true));
+        }
+        return result;
     }
 
     @Override

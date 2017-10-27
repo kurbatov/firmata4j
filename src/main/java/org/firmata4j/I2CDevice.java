@@ -97,13 +97,28 @@ public interface I2CDevice {
     public void unsubscribe(I2CListener listener);
 
     /**
+     * Tells I2C device to send data continuously from specified register as it
+     * available.
+     * 
+     * @param register the device register to read from
+     * @param messageLength length of expected message
+     * @throws IOException when I2C device cannot be asked for data due to 
+     * communication fail
+     * @return true if receiving updates just started or false otherwise (if it
+     * have been already going for example)
+     */
+    public boolean startReceivingUpdates(int register, byte messageLength) throws IOException;
+    
+    /**
      * Tells I2C device to send data continuously as it available.
      * 
      * @param messageLength length of expected message
      * @throws IOException when I2C device cannot be asked for data due to 
      * communication fail
+     * @return true if receiving updates just started or false otherwise (if it
+     * have been already going for example)
      */
-    public void startReceivingUpdates(byte messageLength) throws IOException;
+    public boolean startReceivingUpdates(byte messageLength) throws IOException;
 
     /**
      * Tells I2C device to stop sending data continuously.
