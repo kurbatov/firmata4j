@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -44,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import jssc.SerialNativeInterface;
 import jssc.SerialPortList;
 import org.firmata4j.ui.JPinboard;
 
@@ -110,7 +112,13 @@ public class Example {
     private static String requestPort() {
         JComboBox<String> portNameSelector = new JComboBox<>();
         portNameSelector.setModel(new DefaultComboBoxModel<String>());
-        String[] portNames = SerialPortList.getPortNames();
+        String[] portNames;
+        if (SerialNativeInterface.getOsType() == SerialNativeInterface.OS_MAC_OS_X) {
+            // for MAC OS default pattern of jssc library is too restrictive
+            portNames = SerialPortList.getPortNames("/dev/", Pattern.compile("tty\\..*"));
+        } else {
+            portNames = SerialPortList.getPortNames();
+        }
         for (String portName : portNames) {
             portNameSelector.addItem(portName);
         }
