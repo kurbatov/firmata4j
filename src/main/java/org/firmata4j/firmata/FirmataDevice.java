@@ -37,15 +37,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import jssc.SerialPort;
-import jssc.SerialPortEvent;
-import jssc.SerialPortEventListener;
-import jssc.SerialPortException;
 import org.firmata4j.I2CDevice;
 import org.firmata4j.IODevice;
 import org.firmata4j.IODeviceEventListener;
 import org.firmata4j.IOEvent;
 import org.firmata4j.Pin;
+import org.firmata4j.firmata.transport.AbstractFirmataTransport;
+import org.firmata4j.firmata.transport.SerialFirmataTransport;
 import org.firmata4j.firmata.parser.FirmataToken;
 import org.firmata4j.firmata.parser.WaitingForMessageState;
 import org.firmata4j.fsm.Event;
@@ -59,12 +57,12 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public class FirmataDevice implements IODevice, SerialPortEventListener {
+public class FirmataDevice implements IODevice {
 
     private final BlockingQueue<byte[]> byteQueue = new ArrayBlockingQueue<>(128);
     private final FirmataParser parser = new FirmataParser(byteQueue);
     private final Thread parserExecutor = new Thread(parser, "firmata-parser-thread");
-    private final SerialPort port;
+    private final AbstractFirmataTransport transport;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -84,7 +82,17 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
      * @param portName the port name the device is connected to
      */
     public FirmataDevice(String portName) {
-        this.port = new SerialPort(portName);
+        this(new SerialFirmataTransport(portName));
+    }
+
+    /**
+     * Constructs FirmataDevice instance using the specified device;
+     *
+     * @param transport the hardware device to use
+     */
+    public FirmataDevice(AbstractFirmataTransport transport) {
+        this.transport = transport;
+        transport.setByteQueue(byteQueue);
     }
 
     @Override
@@ -92,7 +100,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         if (!started.getAndSet(true)) {
             parserExecutor.start();
             /* 
-             The startup strategy is to open the port and immediately
+             The startup strategy is to start device and immediately
              send the REPORT_FIRMWARE message.  When we receive the
              firmware name reply, then we know the board is ready to
              communicate.
@@ -110,26 +118,12 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
              Either way, when we hear the REPORT_FIRMWARE reply, we
              know the board is alive and ready to communicate.
              */
-            if (!port.isOpened()) {
-                try {
-                    port.openPort();
-                    port.setParams(
-                            SerialPort.BAUDRATE_57600,
-                            SerialPort.DATABITS_8,
-                            SerialPort.STOPBITS_1,
-                            SerialPort.PARITY_NONE);
-                } catch (SerialPortException ex) {
-                	parserExecutor.interrupt();
-                    throw new IOException("Cannot start firmata device", ex);
-                }
-            }
             try {
-                port.setEventsMask(SerialPort.MASK_RXCHAR);
-                port.addEventListener(this);
+                transport.startTransport();
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
-            } catch (SerialPortException | IOException ex) {
+            } catch (IOException ex) {
                	parserExecutor.interrupt();
-                throw new IOException("Cannot start firmata device", ex);
+                throw ex;
             }
         }
     }
@@ -142,6 +136,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
             parserExecutor.join();
         } catch (InterruptedException ex) {
             LOGGER.warn("Cannot stop parser thread", ex);
+            Thread.currentThread().interrupt();
         } finally {
             IOEvent event = new IOEvent(this);
             for (IODeviceEventListener l : listeners) {
@@ -226,20 +221,6 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
         sendMessage(FirmataMessageFactory.stringMessage(message));
     }
 
-    @Override
-    public void serialEvent(SerialPortEvent event) {
-        // queueing data from input buffer to processing by FSM logic
-        if (event.isRXCHAR() && event.getEventValue() > 0) {
-            try {
-                while (!byteQueue.offer(port.readBytes())) {
-                    // trying to place bytes to queue until it succeeds
-                }
-            } catch (SerialPortException ex) {
-                LOGGER.error("Cannot read from device", ex);
-            }
-        }
-    }
-
     /**
      * Sends the message to connected Firmata device using open port.<br/>
      * This method is package-wide accessible to be used by {@link FirmataPin}.
@@ -248,11 +229,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
      * @throws IOException when writing fails
      */
     void sendMessage(byte[] msg) throws IOException {
-        try {
-            port.writeBytes(msg);
-        } catch (SerialPortException ex) {
-            throw new IOException("Cannot send message to device", ex);
-        }
+        transport.sendMessage(msg);
     }
 
     /**
@@ -273,7 +250,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
      * per firmata-device (not per I2C device). So firmata-device uses the
      * longest delay.
      *
-     * @param delay
+     * @param delay longest delay between writing to I2C and reading from it
      * @throws IOException when sending of configuration to firmata-device
      * failed
      */
@@ -296,14 +273,9 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
      */
     private void shutdown() throws IOException {
         ready.set(false);
-        try {
-            sendMessage(FirmataMessageFactory.analogReport(false));
-            sendMessage(FirmataMessageFactory.digitalReport(false));
-            port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
-            port.closePort();
-        } catch (SerialPortException ex) {
-            throw new IOException("Cannot properly stop firmata device", ex);
-        }
+        sendMessage(FirmataMessageFactory.analogReport(false));
+        sendMessage(FirmataMessageFactory.digitalReport(false));
+        transport.stopTransport();
     }
 
     /**
@@ -313,22 +285,18 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
      */
     private void onProtocolReceive(Event event) {
         if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
-            LOGGER.error(
-                    MessageFormat.format(
-                            "Current version of firmata protocol on device ({0}.{1}) is not compatible with version of fimata4j ({2}.{3}).",
+            LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of fimata4j ({}.{}).",
                             event.getBodyItem(PROTOCOL_MAJOR),
                             event.getBodyItem(PROTOCOL_MINOR),
                             FIRMATA_MAJOR_VERSION,
-                            FIRMATA_MINOR_VERSION));
+                            FIRMATA_MINOR_VERSION);
         } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
-            LOGGER.warn(
-                    MessageFormat.format(
-                            "Current version of firmata protocol on device ({0}.{1}) differs from version supported by frimata4j ({2}.{3})."
+            LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by frimata4j ({}.{})."
                             + " Though these are compatible you may experience some issues.",
                             event.getBodyItem(PROTOCOL_MAJOR),
                             event.getBodyItem(PROTOCOL_MINOR),
                             FIRMATA_MAJOR_VERSION,
-                            FIRMATA_MINOR_VERSION));
+                            FIRMATA_MINOR_VERSION);
         }
     }
 
@@ -479,7 +447,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
 
         @Override
         public void onEvent(Event event) {
-            LOGGER.debug("Event name: {}, type: {}, timestamp: {}", new Object[]{event.getName(), event.getType(), event.getTimestamp()});
+            LOGGER.debug("Event name: {}, type: {}, timestamp: {}", event.getName(), event.getType(), event.getTimestamp());
             for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
                 LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
             }
@@ -528,6 +496,7 @@ public class FirmataDevice implements IODevice, SerialPortEventListener {
                     }
                 } catch (InterruptedException ex) {
                     LOGGER.info("FirmataParser has stopped");
+                    Thread.currentThread().interrupt();
                     return;
                 }
             }
