@@ -1,5 +1,7 @@
 package org.firmata4j.firmata.transport;
 
+import org.firmata4j.firmata.FirmataParser;
+
 import java.io.IOException;
 
 /**
@@ -25,4 +27,10 @@ public interface FirmataTransportInterface {
      */
     void sendMessage(byte[] bytes) throws IOException;
 
+    /**
+     * it will set the parser for parsing response from transport
+     *
+     * @param parser response parser
+     */
+    void setParser(FirmataParser parser);
 }

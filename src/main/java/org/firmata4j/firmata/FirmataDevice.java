@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
@@ -23,33 +23,21 @@
  */
 package org.firmata4j.firmata;
 
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.firmata4j.I2CDevice;
-import org.firmata4j.IODevice;
-import org.firmata4j.IODeviceEventListener;
-import org.firmata4j.IOEvent;
-import org.firmata4j.Pin;
-import org.firmata4j.firmata.transport.AbstractFirmataTransport;
-import org.firmata4j.firmata.transport.SerialFirmataTransport;
+import org.firmata4j.*;
 import org.firmata4j.firmata.parser.FirmataToken;
-import org.firmata4j.firmata.parser.WaitingForMessageState;
+import org.firmata4j.firmata.transport.FirmataTransportInterface;
+import org.firmata4j.firmata.transport.SerialFirmataTransport;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -57,12 +45,11 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public class FirmataDevice implements IODevice {
+public class FirmataDevice implements IODevice, EventListener {
 
-    private final BlockingQueue<byte[]> byteQueue = new ArrayBlockingQueue<>(128);
-    private final FirmataParser parser = new FirmataParser(byteQueue);
-    private final Thread parserExecutor = new Thread(parser, "firmata-parser-thread");
-    private final AbstractFirmataTransport transport;
+    private static final long TIMEOUT = 15000L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
+    private final FirmataTransportInterface transport;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -72,9 +59,7 @@ public class FirmataDevice implements IODevice {
     private final Map<Byte, FirmataI2CDevice> i2cDevices = new HashMap<>();
     private volatile Map<String, Object> firmwareInfo;
     private volatile Map<Integer, Integer> analogMapping;
-    private static final long TIMEOUT = 15000L;
-    private static final int DELAY = 15;
-    private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
+    private FirmataParser parser;
 
     /**
      * Constructs FirmataDevice instance on specified port.
@@ -90,16 +75,21 @@ public class FirmataDevice implements IODevice {
      *
      * @param transport the hardware device to use
      */
-    public FirmataDevice(AbstractFirmataTransport transport) {
+    public FirmataDevice(FirmataTransportInterface transport) {
         this.transport = transport;
-        transport.setByteQueue(byteQueue);
+        parser = new FirmataParser() {
+            @Override
+            protected void onEvent(Event event) {
+                parseEvent(event);
+            }
+        };
+        transport.setParser(parser);
     }
 
     @Override
     public void start() throws IOException {
         if (!started.getAndSet(true)) {
-            parserExecutor.start();
-            /* 
+            /*
              The startup strategy is to start device and immediately
              send the REPORT_FIRMWARE message.  When we receive the
              firmware name reply, then we know the board is ready to
@@ -122,7 +112,7 @@ public class FirmataDevice implements IODevice {
                 transport.startTransport();
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
             } catch (IOException ex) {
-               	parserExecutor.interrupt();
+                transport.startTransport();
                 throw ex;
             }
         }
@@ -131,18 +121,11 @@ public class FirmataDevice implements IODevice {
     @Override
     public void stop() throws IOException {
         shutdown();
-        parserExecutor.interrupt();
-        try {
-            parserExecutor.join();
-        } catch (InterruptedException ex) {
-            LOGGER.warn("Cannot stop parser thread", ex);
-            Thread.currentThread().interrupt();
-        } finally {
-            IOEvent event = new IOEvent(this);
-            for (IODeviceEventListener l : listeners) {
-                l.onStop(event);
-            }
+        IOEvent event = new IOEvent(this);
+        for (IODeviceEventListener l : listeners) {
+            l.onStop(event);
         }
+
     }
 
     @Override
@@ -252,7 +235,7 @@ public class FirmataDevice implements IODevice {
      *
      * @param delay longest delay between writing to I2C and reading from it
      * @throws IOException when sending of configuration to firmata-device
-     * failed
+     *                     failed
      */
     void setI2CDelay(int delay) throws IOException {
         byte[] message = FirmataMessageFactory.i2cConfigRequest(delay);
@@ -275,6 +258,7 @@ public class FirmataDevice implements IODevice {
         ready.set(false);
         sendMessage(FirmataMessageFactory.analogReport(false));
         sendMessage(FirmataMessageFactory.digitalReport(false));
+        parser.stopParser();
         transport.stopTransport();
     }
 
@@ -286,17 +270,17 @@ public class FirmataDevice implements IODevice {
     private void onProtocolReceive(Event event) {
         if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
             LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of fimata4j ({}.{}).",
-                            event.getBodyItem(PROTOCOL_MAJOR),
-                            event.getBodyItem(PROTOCOL_MINOR),
-                            FIRMATA_MAJOR_VERSION,
-                            FIRMATA_MINOR_VERSION);
+                    event.getBodyItem(PROTOCOL_MAJOR),
+                    event.getBodyItem(PROTOCOL_MINOR),
+                    FIRMATA_MAJOR_VERSION,
+                    FIRMATA_MINOR_VERSION);
         } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
             LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by frimata4j ({}.{})."
                             + " Though these are compatible you may experience some issues.",
-                            event.getBodyItem(PROTOCOL_MAJOR),
-                            event.getBodyItem(PROTOCOL_MINOR),
-                            FIRMATA_MAJOR_VERSION,
-                            FIRMATA_MINOR_VERSION);
+                    event.getBodyItem(PROTOCOL_MAJOR),
+                    event.getBodyItem(PROTOCOL_MINOR),
+                    FIRMATA_MAJOR_VERSION,
+                    FIRMATA_MINOR_VERSION);
         }
     }
 
@@ -412,7 +396,7 @@ public class FirmataDevice implements IODevice {
         if (pinId < pins.size()) {
             FirmataPin pin = pins.get(pinId);
             if (Pin.Mode.INPUT.equals(pin.getMode()) ||
-            		Pin.Mode.PULLUP.equals(pin.getMode())) {
+                    Pin.Mode.PULLUP.equals(pin.getMode())) {
                 pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
             }
         }
@@ -436,72 +420,45 @@ public class FirmataDevice implements IODevice {
         }
     }
 
-    private class FirmataParser extends FiniteStateMachine implements Runnable {
-
-        private final BlockingQueue<byte[]> queue;
-
-        public FirmataParser(BlockingQueue<byte[]> queue) {
-            super(WaitingForMessageState.class);
-            this.queue = queue;
+    public void parseEvent(Event event) {
+        LOGGER.debug("Event name: {}, type: {}, timestamp: {}", event.getName(), event.getType(), event.getTimestamp());
+        for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
+            LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
         }
-
-        @Override
-        public void onEvent(Event event) {
-            LOGGER.debug("Event name: {}, type: {}, timestamp: {}", event.getName(), event.getType(), event.getTimestamp());
-            for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
-                LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
-            }
-            LOGGER.debug("\n");
-            switch (event.getName()) {
-                case PROTOCOL_MESSAGE:
-                    onProtocolReceive(event);
-                    break;
-                case FIRMWARE_MESSAGE:
-                    onFirmwareReceive(event);
-                    break;
-                case PIN_CAPABILITIES_MESSAGE:
-                    onCapabilitiesReceive(event);
-                    break;
-                case PIN_STATE:
-                    onPinStateRecieve(event);
-                    break;
-                case ANALOG_MAPPING_MESSAGE:
-                    onAnalogMappingReceive(event);
-                    break;
-                case ANALOG_MESSAGE_RESPONSE:
-                    onAnalogMessageReceive(event);
-                    break;
-                case DIGITAL_MESSAGE_RESPONSE:
-                    onDigitalMessageReceive(event);
-                    break;
-                case STRING_MESSAGE:
-                    onStringMessageReceive(event);
-                    break;
-                case I2C_MESSAGE:
-                    onI2cMessageReceive(event);
-                    break;
-                case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
-                    // should never happen but who knows
-                    throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
-            }
+        LOGGER.debug("\n");
+        switch (event.getName()) {
+            case PROTOCOL_MESSAGE:
+                onProtocolReceive(event);
+                break;
+            case FIRMWARE_MESSAGE:
+                onFirmwareReceive(event);
+                break;
+            case PIN_CAPABILITIES_MESSAGE:
+                onCapabilitiesReceive(event);
+                break;
+            case PIN_STATE:
+                onPinStateRecieve(event);
+                break;
+            case ANALOG_MAPPING_MESSAGE:
+                onAnalogMappingReceive(event);
+                break;
+            case ANALOG_MESSAGE_RESPONSE:
+                onAnalogMessageReceive(event);
+                break;
+            case DIGITAL_MESSAGE_RESPONSE:
+                onDigitalMessageReceive(event);
+                break;
+            case STRING_MESSAGE:
+                onStringMessageReceive(event);
+                break;
+            case I2C_MESSAGE:
+                onI2cMessageReceive(event);
+                break;
+            case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
+                // should never happen but who knows
+                throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
+            default:
+                LOGGER.warn("event {} handler not implemented. will ignore event", event.getName());
         }
-
-        @Override
-        public void run() {
-            while (!Thread.interrupted()) {
-                try {
-                    process(queue.take());
-                    if (!isReady()) {
-                        Thread.sleep(DELAY);
-                    }
-                } catch (InterruptedException ex) {
-                    LOGGER.info("FirmataParser has stopped");
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-        }
-
     }
-
 }

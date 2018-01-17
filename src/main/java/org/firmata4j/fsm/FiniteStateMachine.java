@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Finite State Machine base implementation.<br/>
  * It leaves implementation of event handling in
- * {@link #onEvent(com.codefactory.event.Event)} method to the user.<br/>
+ * {@link #onEvent(org.firmata4j.fsm.Event)} method to the user.<br/>
  * The finite state machine is not thread-safe by its nature. This
  * implementation does not cope with simultaneously received bytes. The bytes
  * have to be fed to the FSM one by one in a single thread that should define
@@ -97,7 +97,7 @@ public abstract class FiniteStateMachine {
      * {@link IllegalArgumentException} is thrown otherwise.
      *
      * @param stateClass the state class
-     * @throw IllegalArgumentException when the state class does not provide a
+     * @throws IllegalArgumentException when the state class does not provide a
      * constructor taking {@link FiniteStateMachine} instance as a single
      * parameter.
      */
@@ -167,5 +167,5 @@ public abstract class FiniteStateMachine {
      *
      * @param event the event
      */
-    public abstract void onEvent(Event event);
+    protected abstract void onEvent(Event event);
 }

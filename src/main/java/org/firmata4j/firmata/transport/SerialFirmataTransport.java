@@ -44,8 +44,10 @@ public class SerialFirmataTransport extends AbstractFirmataTransport implements 
     @Override
     public void stopTransport() throws IOException {
         try {
-            port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
-            port.closePort();
+            if (port.isOpened()) {
+                port.purgePort(SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXCLEAR);
+                port.closePort();
+            }
         } catch (SerialPortException ex) {
             throw new IOException("Cannot properly stop firmata device", ex);
         }
