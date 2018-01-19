@@ -167,5 +167,6 @@ public abstract class FiniteStateMachine {
      *
      * @param event the event
      */
-    protected abstract void onEvent(Event event);
+    public abstract void onEvent(Event event);
+    
 }

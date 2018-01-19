@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,32 +24,38 @@
 package org.firmata4j.firmata;
 
 import org.firmata4j.*;
+import org.firmata4j.firmata.parser.FirmataParser;
 import org.firmata4j.firmata.parser.FirmataToken;
-import org.firmata4j.firmata.transport.FirmataTransportInterface;
-import org.firmata4j.firmata.transport.SerialFirmataTransport;
+import org.firmata4j.transport.SerialTransport;
+import org.firmata4j.fsm.Parser;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.firmata4j.firmata.parser.FirmataToken.*;
+import org.firmata4j.transport.TransportInterface;
 
 /**
  * Implements {@link IODevice} that is using Firmata protocol.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public class FirmataDevice implements IODevice, EventListener {
+public class FirmataDevice implements IODevice {
 
-    private static final long TIMEOUT = 15000L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
-    private final FirmataTransportInterface transport;
+    private Parser parser;
+    private TransportInterface transport;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -59,7 +65,9 @@ public class FirmataDevice implements IODevice, EventListener {
     private final Map<Byte, FirmataI2CDevice> i2cDevices = new HashMap<>();
     private volatile Map<String, Object> firmwareInfo;
     private volatile Map<Integer, Integer> analogMapping;
-    private FirmataParser parser;
+    
+    private static final long TIMEOUT = 15000L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
     /**
      * Constructs FirmataDevice instance on specified port.
@@ -67,7 +75,7 @@ public class FirmataDevice implements IODevice, EventListener {
      * @param portName the port name the device is connected to
      */
     public FirmataDevice(String portName) {
-        this(new SerialFirmataTransport(portName));
+        this(new SerialTransport(portName));
     }
 
     /**
@@ -75,12 +83,12 @@ public class FirmataDevice implements IODevice, EventListener {
      *
      * @param transport the hardware device to use
      */
-    public FirmataDevice(FirmataTransportInterface transport) {
+    public FirmataDevice(TransportInterface transport) {
         this.transport = transport;
         parser = new FirmataParser() {
             @Override
-            protected void onEvent(Event event) {
-                parseEvent(event);
+            public void onEvent(Event event) {
+                handleEvent(event);
             }
         };
         transport.setParser(parser);
@@ -109,10 +117,11 @@ public class FirmataDevice implements IODevice, EventListener {
              know the board is alive and ready to communicate.
              */
             try {
-                transport.startTransport();
+                parser.start();
+                transport.start();
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
             } catch (IOException ex) {
-                transport.startTransport();
+                transport.start();
                 throw ex;
             }
         }
@@ -195,6 +204,8 @@ public class FirmataDevice implements IODevice, EventListener {
                 firmwareInfo.get(FirmataToken.FIRMWARE_MAJOR),
                 firmwareInfo.get(FirmataToken.FIRMWARE_MINOR));
     }
+    
+    //TODO add get firmware method
 
     @Override
     public void sendMessage(String message) throws IOException {
@@ -212,7 +223,7 @@ public class FirmataDevice implements IODevice, EventListener {
      * @throws IOException when writing fails
      */
     void sendMessage(byte[] msg) throws IOException {
-        transport.sendMessage(msg);
+        transport.write(msg);
     }
 
     /**
@@ -258,8 +269,8 @@ public class FirmataDevice implements IODevice, EventListener {
         ready.set(false);
         sendMessage(FirmataMessageFactory.analogReport(false));
         sendMessage(FirmataMessageFactory.digitalReport(false));
-        parser.stopParser();
-        transport.stopTransport();
+        parser.stop();
+        transport.stop();
     }
 
     /**
@@ -420,7 +431,7 @@ public class FirmataDevice implements IODevice, EventListener {
         }
     }
 
-    public void parseEvent(Event event) {
+    protected void handleEvent(Event event) {
         LOGGER.debug("Event name: {}, type: {}, timestamp: {}", event.getName(), event.getType(), event.getTimestamp());
         for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
             LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
