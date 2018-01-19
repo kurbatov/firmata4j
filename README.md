@@ -21,7 +21,7 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.5</version>
+    <version>2.3.6</version>
 </dependency>
 ```
 
