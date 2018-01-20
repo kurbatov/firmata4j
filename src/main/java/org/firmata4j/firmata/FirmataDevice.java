@@ -121,7 +121,8 @@ public class FirmataDevice implements IODevice {
                 transport.start();
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
             } catch (IOException ex) {
-                transport.start();
+                parser.stop();
+                transport.stop();
                 throw ex;
             }
         }
