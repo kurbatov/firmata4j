@@ -61,6 +61,11 @@ public abstract class FirmataParser extends FiniteStateMachine implements Parser
     public void stop() {
         if (running.getAndSet(false)) {
             byteQueue.clear();
+
+            // interrupt the thread to ensure it falls out of the loop
+            // and sees the shutdown request
+            parserExecutor.interrupt();
+
             try {
                 parserExecutor.join(WAIT_FOR_TERMINATION_DELAY);
             } catch (InterruptedException e) {
