@@ -217,13 +217,16 @@ public class FirmataDevice implements IODevice {
     }
 
     /**
-     * Sends the message to connected Firmata device using open port.<br/>
-     * This method is package-wide accessible to be used by {@link FirmataPin}.
+     * Sends raw message to connected Firmata device using open port.<br/>
+     * Consider using {@link FirmataMessageFactory} methods to prepare binary
+     * messages before sending.
      *
      * @param msg the Firmata message
      * @throws IOException when writing fails
+     * @see FirmataMessageFactory
      */
-    void sendMessage(byte[] msg) throws IOException {
+    @Override
+    public void sendMessage(byte... msg) throws IOException {
         transport.write(msg);
     }
 

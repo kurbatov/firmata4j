@@ -136,11 +136,19 @@ public interface IODevice {
     public String getProtocol();
     
     /**
-     * Sends arbitrary message to device.
+     * Sends text message to device.
      * 
      * @param message the message
      * @throws IOException when sending a message fails
      */
     public void sendMessage(String message) throws IOException;
+    
+    /**
+     * Sends binary message to device.
+     *
+     * @param msg message
+     * @throws IOException when sending the message fails
+     */
+    public void sendMessage(byte... msg) throws IOException;
 
 }
