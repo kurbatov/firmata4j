@@ -39,7 +39,7 @@ public interface Pin {
     /**
      * Mode represents particular duty of a pin.
      */
-    public static enum Mode {
+    enum Mode {
 
         /**
          * Digital pin in input mode
@@ -123,21 +123,21 @@ public interface Pin {
      *
      * @return the pin's device
      */
-    public IODevice getDevice();
+    IODevice getDevice();
 
     /**
      * Returns the index of the pin on its device.
      *
      * @return the index of the pin
      */
-    public byte getIndex();
+    byte getIndex();
 
     /**
      * Returns current mode of the pin.
      *
      * @return current mode of the pin
      */
-    public Mode getMode();
+    Mode getMode();
 
     /**
      * Assigns new mode to the pin.
@@ -146,7 +146,7 @@ public interface Pin {
      * @throws IOException when assigning is failed due a communication issue
      * @throws IllegalArgumentException when the pin does not support the mode
      */
-    public void setMode(Mode mode) throws IOException, IllegalArgumentException;
+    void setMode(Mode mode) throws IOException, IllegalArgumentException;
 
     /**
      * 
@@ -155,7 +155,7 @@ public interface Pin {
      * @throws IOException when assigning is failed due a communication issue
      * @throws IllegalArgumentException when the pin does not support the mode
      */
-    public void setServoMode(int minPulse, int maxPulse) throws IOException, IllegalArgumentException;
+    void setServoMode(int minPulse, int maxPulse) throws IOException, IllegalArgumentException;
 
     /**
      * Checks if the pin supports the mode
@@ -163,21 +163,21 @@ public interface Pin {
      * @param mode the mode
      * @return true if the pin supports the mode, false otherwise
      */
-    public boolean supports(Mode mode);
+    boolean supports(Mode mode);
 
     /**
      * Returns a set of modes supported by the pin.
      *
      * @return set of supported modes
      */
-    public Set<Mode> getSupportedModes();
+    Set<Mode> getSupportedModes();
 
     /**
      * Returns current value of the pin.
      *
      * @return current value of the pin
      */
-    public long getValue();
+    long getValue();
 
     /**
      * Sets the value to the pin. It is impossible to set a value to a pin in
@@ -188,14 +188,14 @@ public interface Pin {
      * @throws IllegalStateException when the pin is in input mode such as
      * {@link Mode#INPUT} or {@link Mode#ANALOG}.
      */
-    public void setValue(long value) throws IOException, IllegalStateException;
+    void setValue(long value) throws IOException, IllegalStateException;
 
     /**
      * Adds the specified listener to receive events from this pin.
      *
      * @param listener the listener
      */
-    public void addEventListener(PinEventListener listener);
+    void addEventListener(PinEventListener listener);
 
     /**
      * Removes the specified listener so that it no longer receives events from
@@ -203,14 +203,14 @@ public interface Pin {
      *
      * @param listener the listener
      */
-    public void removeEventListener(PinEventListener listener);
+    void removeEventListener(PinEventListener listener);
     
     
     /**
      * Remove all listeners from this pin.
      *
      */
-    public void removeAllEventListeners();
+    void removeAllEventListeners();
 
 
 }

@@ -70,7 +70,7 @@ public class WaitingForMessageState extends AbstractState {
             default:
                 //skip non control token
                 Event evt = new Event(ERROR_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
-                evt.setBodyItem(ERROR_DESCRIPTION, String.format("Unknown control token has been receved. Skipping. 0x%2X", b));
+                evt.setBodyItem(ERROR_DESCRIPTION, String.format("Unknown control token has been received. Skipping. 0x%2X", b));
                 publish(evt);
         }
     }

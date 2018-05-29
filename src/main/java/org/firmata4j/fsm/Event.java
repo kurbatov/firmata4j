@@ -116,7 +116,7 @@ public class Event {
      * Returns the body of the event.
      */
     public Map<String, Object> getBody() {
-        return new HashMap<String, Object>(body);
+        return new HashMap<>(body);
     }
 
     /**

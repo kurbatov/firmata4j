@@ -34,25 +34,25 @@ public interface Parser {
     /**
      * Starts processing of input data.
      */
-    public void start();
+    void start();
 
     /**
      * Stops processing of input data.
      */
-    public void stop();
+    void stop();
 
     /**
      * Processes the input data.
      *
      * @param bytes the data
      */
-    public void parse(byte[] bytes);
+    void parse(byte[] bytes);
 
     /**
      * Reacts to an event that occurs during processing of input.
      *
      * @param event the event
      */
-    public void onEvent(Event event);
+    void onEvent(Event event);
 
 }

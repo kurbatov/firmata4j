@@ -34,14 +34,13 @@ public interface PinEventListener {
     
     /**
      * Invoked when pin's mode changes.
-     * @param event 
+     * @param event Information about the event that was triggered
      */
-    public void onModeChange(IOEvent event);
+    void onModeChange(IOEvent event);
 
     /**
      * Invoked when pin's value changes.
-     * @param event 
+     * @param event Information about the event that was triggered
      */
-    public void onValueChange(IOEvent event);
-
+    void onValueChange(IOEvent event);
 }

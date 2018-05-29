@@ -53,7 +53,8 @@ import static org.firmata4j.ssd1306.SSD1306MessageFactory.*;
  * </p>
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
- * @see https://www.adafruit.com/category/63_98
+ *
+ * see https://www.adafruit.com/category/63_98
  */
 public class SSD1306 {
 

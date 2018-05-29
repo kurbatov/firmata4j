@@ -191,7 +191,7 @@ public class FirmataPin implements Pin {
 
     /**
      * Sets initial mode of a pin. This method bypasses standard
-     * {@link #setMode(com.codefactory.firmata4j.Pin.Mode)} to avoid sending a
+     * {@link #setMode(org.firmata4j.Pin.Mode)} to avoid sending a
      * message to hardware.
      *
      * @param mode initial mode

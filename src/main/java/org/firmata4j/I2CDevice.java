@@ -36,7 +36,7 @@ public interface I2CDevice {
     /**
      * Returns address of I2C device.
      */
-    public byte getAddress();
+    byte getAddress();
 
     /**
      * Sets delay between writing and reading data to/from I2C device.
@@ -45,7 +45,7 @@ public interface I2CDevice {
      * moment when the data can be read from it
      * @throws IOException when delay cannot be set due to communication fail
      */
-    public void setDelay(int delay) throws IOException;
+    void setDelay(int delay) throws IOException;
 
     /**
      * Sends data to the I2C device.
@@ -54,7 +54,7 @@ public interface I2CDevice {
      * @throws IOException when the data cannot be sent due to communication
      * fail
      */
-    public void tell(byte... data) throws IOException;
+    void tell(byte... data) throws IOException;
 
     /**
      * Requests data from I2C device and receives it only once. Specified
@@ -65,7 +65,7 @@ public interface I2CDevice {
      * @throws IOException when I2C device cannot be asked for data due to 
      * communication fail
      */
-    public void ask(byte responseLength, I2CListener listener) throws IOException;
+    void ask(byte responseLength, I2CListener listener) throws IOException;
 
     /**
      * Requests data from I2C device and receives it only once. Specified
@@ -77,7 +77,7 @@ public interface I2CDevice {
      * @throws IOException when I2C device cannot be asked for data due to 
      * communication fail
      */
-    public void ask(int register, byte responseLength, I2CListener listener) throws IOException;
+    void ask(int register, byte responseLength, I2CListener listener) throws IOException;
 
     /**
      * Registers a listener as a receiver of regular updates from I2C device.
@@ -87,14 +87,14 @@ public interface I2CDevice {
      * 
      * @param listener the object that receives updates
      */
-    public void subscribe(I2CListener listener);
+    void subscribe(I2CListener listener);
 
     /**
      * Unregisters a listener from receiving of regular updates from I2C device.
      * 
      * @param listener the object that used to receive updates
      */
-    public void unsubscribe(I2CListener listener);
+    void unsubscribe(I2CListener listener);
 
     /**
      * Tells I2C device to send data continuously from specified register as it
@@ -107,7 +107,7 @@ public interface I2CDevice {
      * @return true if receiving updates just started or false otherwise (if it
      * have been already going for example)
      */
-    public boolean startReceivingUpdates(int register, byte messageLength) throws IOException;
+    boolean startReceivingUpdates(int register, byte messageLength) throws IOException;
     
     /**
      * Tells I2C device to send data continuously as it available.
@@ -118,7 +118,7 @@ public interface I2CDevice {
      * @return true if receiving updates just started or false otherwise (if it
      * have been already going for example)
      */
-    public boolean startReceivingUpdates(byte messageLength) throws IOException;
+    boolean startReceivingUpdates(byte messageLength) throws IOException;
 
     /**
      * Tells I2C device to stop sending data continuously.
@@ -126,6 +126,6 @@ public interface I2CDevice {
      * @throws IOException when I2C device cannot be asked to stop due to 
      * communication fail
      */
-    public void stopReceivingUpdates() throws IOException;
+    void stopReceivingUpdates() throws IOException;
 
 }

@@ -284,13 +284,13 @@ public class FirmataDevice implements IODevice {
      */
     private void onProtocolReceive(Event event) {
         if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
-            LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of fimata4j ({}.{}).",
+            LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of firmata4j ({}.{}).",
                     event.getBodyItem(PROTOCOL_MAJOR),
                     event.getBodyItem(PROTOCOL_MINOR),
                     FIRMATA_MAJOR_VERSION,
                     FIRMATA_MINOR_VERSION);
         } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
-            LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by frimata4j ({}.{})."
+            LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by firmata4j ({}.{})."
                             + " Though these are compatible you may experience some issues.",
                     event.getBodyItem(PROTOCOL_MAJOR),
                     event.getBodyItem(PROTOCOL_MINOR),
@@ -314,7 +314,7 @@ public class FirmataDevice implements IODevice {
     }
 
     /**
-     * Describes rection to capabilities data receiving.
+     * Describes reaction to capabilities data receiving.
      *
      * @param event the event of receiving capabilities data
      */
@@ -343,7 +343,7 @@ public class FirmataDevice implements IODevice {
      *
      * @param event the event of receiving pin state data
      */
-    private void onPinStateRecieve(Event event) {
+    private void onPinStateReceive(Event event) {
         byte pinId = (Byte) event.getBodyItem(PIN_ID);
         FirmataPin pin = pins.get(pinId);
         if (pin.getMode() == null) {
@@ -452,7 +452,7 @@ public class FirmataDevice implements IODevice {
                 onCapabilitiesReceive(event);
                 break;
             case PIN_STATE:
-                onPinStateRecieve(event);
+                onPinStateReceive(event);
                 break;
             case ANALOG_MAPPING_MESSAGE:
                 onAnalogMappingReceive(event);

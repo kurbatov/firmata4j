@@ -37,7 +37,8 @@ import java.util.Arrays;
  * It was inspired by Adafruit GFX library.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
- * @see https://github.com/adafruit/Adafruit-GFX-Library
+ *
+ * see https://github.com/adafruit/Adafruit-GFX-Library
  */
 public class MonochromeCanvas {
 

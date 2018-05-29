@@ -50,7 +50,7 @@ public interface IODevice {
      * @throws IOException when communication cannot be established
      * @see IODeviceEventListener#onStart(org.firmata4j.IOEvent)
      */
-    public void start() throws IOException;
+    void start() throws IOException;
 
     /**
      * Terminates communication with hardware.<br/>
@@ -60,7 +60,7 @@ public interface IODevice {
      * @throws IOException when communication cannot be properly terminated
      * @see IODeviceEventListener#onStop(org.firmata4j.IOEvent)
      */
-    public void stop() throws IOException;
+    void stop() throws IOException;
 
     /**
      * Waits for initialization is done.<br/>
@@ -71,14 +71,14 @@ public interface IODevice {
      * for initialization is interrupted or connection has not been established
      * during timeout.
      */
-    public void ensureInitializationIsDone() throws InterruptedException;
+    void ensureInitializationIsDone() throws InterruptedException;
 
     /**
      * Checks whether the device is fully initialized and ready to use.
      *
      * @return true if device is ready, false otherwise
      */
-    public boolean isReady();
+    boolean isReady();
 
     /**
      * Returns a set of pins of the device.
@@ -86,14 +86,14 @@ public interface IODevice {
      * @return set of device's pins
      * @see Pin
      */
-    public Set<Pin> getPins();
+    Set<Pin> getPins();
 
     /**
      * Returns count of pins of the device.
      *
      * @return count of pins
      */
-    public int getPinsCount();
+    int getPinsCount();
 
     /**
      * Returns a pin by its index on device. The index should be less than
@@ -102,7 +102,7 @@ public interface IODevice {
      * @param index index of the pin
      * @return the pin
      */
-    public Pin getPin(int index);
+    Pin getPin(int index);
     
     /**
      * Returns I2C device by its address.
@@ -111,14 +111,14 @@ public interface IODevice {
      * @return I2C device
      * @throws IOException when communication to the IO device failed
      */
-    public I2CDevice getI2CDevice(byte address) throws IOException;
+    I2CDevice getI2CDevice(byte address) throws IOException;
 
     /**
      * Adds the specified listener to receive events from this device.
      *
      * @param listener the listener
      */
-    public void addEventListener(IODeviceEventListener listener);
+    void addEventListener(IODeviceEventListener listener);
 
     /**
      * Removes the specified listener so that it no longer receives events from
@@ -126,14 +126,14 @@ public interface IODevice {
      *
      * @param listener the listener
      */
-    public void removeEventListener(IODeviceEventListener listener);
+    void removeEventListener(IODeviceEventListener listener);
 
     /**
      * Returns the name of a protocol that the device uses.
      *
      * @return the name of a protocol
      */
-    public String getProtocol();
+    String getProtocol();
     
     /**
      * Sends text message to device.
@@ -141,7 +141,7 @@ public interface IODevice {
      * @param message the message
      * @throws IOException when sending a message fails
      */
-    public void sendMessage(String message) throws IOException;
+    void sendMessage(String message) throws IOException;
     
     /**
      * Sends binary message to device.
@@ -149,6 +149,6 @@ public interface IODevice {
      * @param msg message
      * @throws IOException when sending the message fails
      */
-    public void sendMessage(byte... msg) throws IOException;
+    void sendMessage(byte... msg) throws IOException;
 
 }
