@@ -31,6 +31,6 @@ package org.firmata4j;
  */
 public interface I2CListener {
     
-    public void onReceive(I2CEvent event);
+    void onReceive(I2CEvent event);
     
 }

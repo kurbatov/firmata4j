@@ -31,16 +31,17 @@ import static org.firmata4j.ssd1306.SSD1306Token.*;
  * device.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
- * @see https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
+ *
+ * see https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
  */
 public class SSD1306MessageFactory {
 
     // fundamental commands
-    public static final byte[] setContrast(byte contrast) {
+    public static byte[] setContrast(byte contrast) {
         return new byte[]{COMMAND_CONTROL_BYTE, SET_CONTRAST, contrast};
     }
 
-    public static final byte[] setDisplayInverse(boolean inverse) {
+    public static byte[] setDisplayInverse(boolean inverse) {
         byte command;
         if (inverse) {
             command = INVERSE_DISPLAY;
@@ -56,7 +57,7 @@ public class SSD1306MessageFactory {
     public static final byte[] TURN_ON = {COMMAND_CONTROL_BYTE, LED_ON};
 
     // scrolling commands
-    public static final byte[] setHorizontalScroll(ScrollDirection direction, byte startAddress, byte endAddress, byte speed) {
+    public static byte[] setHorizontalScroll(ScrollDirection direction, byte startAddress, byte endAddress, byte speed) {
         if (startAddress < 0 || startAddress > 7 || endAddress < 0 || endAddress > 7) {
             throw new IllegalArgumentException("Start and end address must be between 0 and 7.");
         }
@@ -77,7 +78,7 @@ public class SSD1306MessageFactory {
         };
     }
 
-    public static final byte[] setVerticalAndHorizontalScroll(
+    public static byte[] setVerticalAndHorizontalScroll(
             ScrollDirection direction,
             byte startAddress,
             byte endAddress,
@@ -140,7 +141,7 @@ public class SSD1306MessageFactory {
      * first row below the top fixed area.
      * @return command sequence
      */
-    public static final byte[] setVerticalScrollArea(byte fixedRows, byte scrolledRows) {
+    public static byte[] setVerticalScrollArea(byte fixedRows, byte scrolledRows) {
         if (fixedRows < 0 || fixedRows > 63) {
             throw new IllegalArgumentException("Fixed rows must be between 0 and 63.");
         }
@@ -158,7 +159,7 @@ public class SSD1306MessageFactory {
     public static final byte[] ENABLE_SCROLLING = {COMMAND_CONTROL_BYTE, ACTIVATE_SCROLL};
 
     // addressing comands
-    public static final byte[] setMemoryAddressingMode(MemoryAddressingMode mode) {
+    public static byte[] setMemoryAddressingMode(MemoryAddressingMode mode) {
         return new byte[]{COMMAND_CONTROL_BYTE, SET_MEMORY_ADDR_MODE, COMMAND_CONTROL_BYTE, (byte) mode.ordinal()};
     }
 
@@ -170,7 +171,7 @@ public class SSD1306MessageFactory {
      * @param endAddress Column end address, range : 0-127
      * @return command sequence
      */
-    public static final byte[] setColumnAddress(byte startAddress, byte endAddress) {
+    public static byte[] setColumnAddress(byte startAddress, byte endAddress) {
         if (startAddress < 0 || endAddress < 0) {
             throw new IllegalArgumentException("Start and end address must be positive.");
         }
@@ -185,7 +186,7 @@ public class SSD1306MessageFactory {
      * @param endAddress Page end Address, range : 0-7
      * @return command sequence
      */
-    public static final byte[] setPageAddress(byte startAddress, byte endAddress) {
+    public static byte[] setPageAddress(byte startAddress, byte endAddress) {
         if (startAddress < 0 || startAddress > 7 || endAddress < 0 || endAddress > 7) {
             throw new IllegalArgumentException("Start and end address must be between 0 and 7.");
         }
@@ -201,7 +202,7 @@ public class SSD1306MessageFactory {
      * @param address lower nibble of the column start address
      * @return command sequence
      */
-    public static final byte[] setLowerColumnStartAddress(byte address) {
+    public static byte[] setLowerColumnStartAddress(byte address) {
         if (address < 0 || address > 15) {
             throw new IllegalArgumentException("Start address must be between 0 and 15.");
         }
@@ -217,7 +218,7 @@ public class SSD1306MessageFactory {
      * @param address higher nibble of the column start address
      * @return command sequence
      */
-    public static final byte[] setHigherColumnStartAddress(byte address) {
+    public static byte[] setHigherColumnStartAddress(byte address) {
         if (address < 0 || address > 15) {
             throw new IllegalArgumentException("Start address must be between 0 and 15.");
         }
@@ -231,7 +232,7 @@ public class SSD1306MessageFactory {
      * @param address Page start Address, range : 0-7
      * @return command sequence
      */
-    public static final byte[] setRAMPageStartAddress(byte address) {
+    public static byte[] setRAMPageStartAddress(byte address) {
         if (address < 0 || address > 7) {
             throw new IllegalArgumentException("Start address must be between 0 and 7.");
         }
@@ -239,14 +240,14 @@ public class SSD1306MessageFactory {
     }
 
     // hardvare configuration commands
-    public static final byte[] setDisplayStartLine(int line) {
+    public static byte[] setDisplayStartLine(int line) {
         if (line < 0 || line > 63) {
             throw new IllegalArgumentException("Line register must be between 0 and 63.");
         }
         return new byte[]{COMMAND_CONTROL_BYTE, (byte) (SET_START_LINE | line)};
     }
 
-    public static final byte[] setHorizontalFlip(boolean flip) {
+    public static byte[] setHorizontalFlip(boolean flip) {
         byte command;
         if (flip) {
             command = SEG_REMAP | 0x1;
@@ -256,14 +257,14 @@ public class SSD1306MessageFactory {
         return new byte[]{COMMAND_CONTROL_BYTE, command};
     }
 
-    public static final byte[] setMultiplexRatio(int multiplexRatio) {
+    public static byte[] setMultiplexRatio(int multiplexRatio) {
         if (multiplexRatio < 16 || multiplexRatio > 64) {
             throw new IllegalArgumentException("Multiplex ratio must be between 16 an 64.");
         }
         return new byte[]{COMMAND_CONTROL_BYTE, SET_MULTIPLEX, COMMAND_CONTROL_BYTE, (byte) (multiplexRatio - 1)};
     }
 
-    public static final byte[] setVerticalFlip(boolean flip) {
+    public static byte[] setVerticalFlip(boolean flip) {
         byte[] command = new byte[2];
         command[0] = COMMAND_CONTROL_BYTE;
         if (flip) {
@@ -274,14 +275,14 @@ public class SSD1306MessageFactory {
         return command;
     }
 
-    public static final byte[] setDisplayOffset(int offset) {
+    public static byte[] setDisplayOffset(int offset) {
         if (offset < 0 || offset > 63) {
             throw new IllegalArgumentException("Display offset must be between 0 and 63.");
         }
         return new byte[]{COMMAND_CONTROL_BYTE, SET_DISPLAY_OFFSET, COMMAND_CONTROL_BYTE, (byte) offset};
     }
 
-    public static final byte[] setCOMPinsConfig(boolean sequential, boolean leftRightRemap) {
+    public static byte[] setCOMPinsConfig(boolean sequential, boolean leftRightRemap) {
         byte param = 0x02;
         if (!sequential) {
             param |= 0x10;
@@ -293,7 +294,7 @@ public class SSD1306MessageFactory {
     }
 
     // timing configuration commands
-    public static final byte[] setDisplayClock(byte divideRatio, byte oscillatorFrequency) {
+    public static byte[] setDisplayClock(byte divideRatio, byte oscillatorFrequency) {
         if (divideRatio < 0 || oscillatorFrequency < 0) {
             throw new IllegalArgumentException("Divide ratio and oscillator frequency must be non-negative.");
         }
@@ -301,7 +302,7 @@ public class SSD1306MessageFactory {
         return new byte[]{COMMAND_CONTROL_BYTE, SET_DISPLAY_CLOCK, COMMAND_CONTROL_BYTE, param};
     }
 
-    public static final byte[] setPrechargePeriod(byte phase1Period, byte phase2Period) {
+    public static byte[] setPrechargePeriod(byte phase1Period, byte phase2Period) {
         if (phase1Period <= 0 || phase2Period <= 0) {
             throw new IllegalArgumentException("Phase 1 and 2 periods must be positive.");
         }
@@ -309,14 +310,14 @@ public class SSD1306MessageFactory {
         return new byte[]{COMMAND_CONTROL_BYTE, SET_PRECHARGE_PERIOD, COMMAND_CONTROL_BYTE, param};
     }
 
-    public static final byte[] setVcomhDeselectLevel(byte level) {
+    public static byte[] setVcomhDeselectLevel(byte level) {
         if (level < 0 || level > 7) {
             throw new IllegalArgumentException("Level value must be between 0 and 7.");
         }
         return new byte[]{COMMAND_CONTROL_BYTE, SET_VCOMH_DESELECT, COMMAND_CONTROL_BYTE, (byte) (level << 4)};
     }
 
-    public static final byte[] setChargePump(boolean enabled) {
+    public static byte[] setChargePump(boolean enabled) {
         byte param = 0x10;
         if (enabled) {
             param |= 0x04;

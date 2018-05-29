@@ -38,13 +38,13 @@ public interface State {
      *
      * @param b the input byte
      */
-    public void process(byte b);
+    void process(byte b);
 
     /**
      * Returns the {@link FiniteStateMachine} instance the state belongs to.
      *
      * @return the finite state machine
      */
-    public FiniteStateMachine getFiniteStateMashine();
+    FiniteStateMachine getFiniteStateMashine();
 
 }

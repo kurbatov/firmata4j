@@ -63,7 +63,7 @@ public class I2CExample {
 
     private static final JFrame INITIALIZATION_FRAME = new JFrame();
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         try { // set look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {

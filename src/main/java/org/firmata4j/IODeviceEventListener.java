@@ -38,7 +38,7 @@ public interface IODeviceEventListener {
      *
      * @param event the event
      */
-    public void onStart(IOEvent event);
+    void onStart(IOEvent event);
 
     /**
      * Invoked when communication with {@link IODevice} has been 
@@ -46,7 +46,7 @@ public interface IODeviceEventListener {
      *
      * @param event the event
      */
-    public void onStop(IOEvent event);
+    void onStop(IOEvent event);
 
     /**
      * Invoked when the state of one of device's pins has been changed.
@@ -54,7 +54,7 @@ public interface IODeviceEventListener {
      *
      * @param event the event
      */
-    public void onPinChange(IOEvent event);
+    void onPinChange(IOEvent event);
 
     /**
      * Invoked when a string message has been received from the device.
@@ -62,6 +62,6 @@ public interface IODeviceEventListener {
      * @param event the event
      * @param message the message
      */
-    public void onMessageReceive(IOEvent event, String message);
+    void onMessageReceive(IOEvent event, String message);
 
 }

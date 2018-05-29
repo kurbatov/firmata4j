@@ -43,7 +43,7 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
 public class ParsingAnalogMappingState extends AbstractState {
 
     private int portId;
-    private final Map<Integer, Integer> mapping = new ConcurrentHashMap<Integer, Integer>();
+    private final Map<Integer, Integer> mapping = new ConcurrentHashMap<>();
 
     public ParsingAnalogMappingState(FiniteStateMachine fsm) {
         super(fsm);
