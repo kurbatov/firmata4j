@@ -26,6 +26,7 @@ package org.firmata4j.firmata.parser;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -62,7 +63,7 @@ public class ParsingI2CMessageState extends AbstractState {
             byte register = buffer[1];
             byte[] message = new byte[buffer.length - 2];
             System.arraycopy(buffer, 2, message, 0, buffer.length - 2);
-            Event event = new Event(I2C_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            Event event = new Event(I2C_MESSAGE);
             event.setBodyItem(I2C_ADDRESS, address);
             event.setBodyItem(I2C_REGISTER, register);
             event.setBodyItem(I2C_MESSAGE, message);

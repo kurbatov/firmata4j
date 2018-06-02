@@ -37,7 +37,7 @@ import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
  * This state parses type of sysex message and transfers FSM to the state which
- * is able to handle the message.<br/>
+ * is able to handle the message.<br>
  * If the state receives unknown type of sysex message, it transfers FSM to
  * {@link WaitingForMessageState}.
  *
@@ -67,9 +67,11 @@ public class ParsingSysexMessageState extends AbstractState {
     public void process(byte b) {
         Class<? extends State> nextState = STATES.get(b);
         if (nextState == null) {
-            LOGGER.error("Unsupported sysex command {}.", b);
-            nextState = WaitingForMessageState.class;
+            State newState = new ParsingCustomSysexMessageState(getFiniteStateMashine());
+            newState.process(b);
+            transitTo(newState);
+        } else {
+            transitTo(nextState);
         }
-        transitTo(nextState);
     }
 }

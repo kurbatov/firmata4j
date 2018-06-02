@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ package org.firmata4j;
 
 import java.io.IOException;
 import java.util.Set;
+import org.firmata4j.fsm.Event;
 
 /**
  * This interface describes a device which is able to receive and transmit
@@ -134,6 +135,14 @@ public interface IODevice {
      * @return the name of a protocol
      */
     String getProtocol();
+    
+    /**
+     * Adds handler for low-level events of specified type.
+     *
+     * @param messageType type of low-level event
+     * @param handler handler of the event
+     */
+    void addProtocolMessageHandler(String messageType, Consumer<Event> handler);
     
     /**
      * Sends text message to device.

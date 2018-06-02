@@ -144,41 +144,5 @@ public interface FirmataToken {
 
     int MIN_SAMPLING_INTERVAL    = 10;
     int MAX_SAMPLING_INTERVAL    = 100;
-
-    // event types and names
-    String FIRMATA_MESSAGE_EVENT_TYPE = "firmataMessage";
-    
-    String PROTOCOL_MESSAGE = "protocolMessage";
-    String PROTOCOL_MAJOR = "major";
-    String PROTOCOL_MINOR = "minor";
-    
-    String FIRMWARE_MESSAGE = "firmwareMessage";
-    String FIRMWARE_MAJOR = "major";
-    String FIRMWARE_MINOR = "minor";
-    String FIRMWARE_NAME = "firmwareName";
-    
-    String ANALOG_MAPPING_MESSAGE = "analogMapping";
-    String ANALOG_MAPPING = "analogMapping";
-    
-    String ANALOG_MESSAGE_RESPONSE = "analogMessage";
-    String DIGITAL_MESSAGE_RESPONSE = "digitalMessage";
-    String I2C_MESSAGE = "i2cMessage";
-    String I2C_ADDRESS = "i2cAddress";
-    String I2C_REGISTER = "i2cRegister";
-
-    String PIN_CAPABILITIES_MESSAGE = "pinCapabilities";
-    String PIN_STATE = "pinState";
-    String PIN_ID = "pinId";
-    String PIN_SUPPORTED_MODES = "supportedModes";
-    String PIN_MODE = "pinMode";
-    String PIN_VALUE = "pinValue";
-    
-    String SYSTEM_RESET_MESSAGE = "systemReset";
-    
-    String STRING_MESSAGE = "stringMessage";
-    
-    String ERROR_MESSAGE = "error";
-    String ERROR_DESCRIPTION = "description";
-    String ERROR_CAUSE = "cause";
     
 }

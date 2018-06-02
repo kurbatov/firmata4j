@@ -30,7 +30,7 @@ import jssc.SerialPortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
-import org.firmata4j.fsm.Parser;
+import org.firmata4j.Parser;
 
 /**
  * Allows connections over the serial interface.

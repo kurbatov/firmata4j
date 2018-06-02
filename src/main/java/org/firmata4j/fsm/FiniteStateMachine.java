@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,16 @@
 
 package org.firmata4j.fsm;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.firmata4j.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Finite State Machine base implementation.<br/>
+ * Finite State Machine base implementation.<br>
  * It leaves implementation of event handling in
- * {@link #onEvent(org.firmata4j.fsm.Event)} method to the user.<br/>
+ * {@link #onEvent(org.firmata4j.fsm.Event)} method to the user.<br>
  * The finite state machine is not thread-safe by its nature. This
  * implementation does not cope with simultaneously received bytes. The bytes
  * have to be fed to the FSM one by one in a single thread that should define
@@ -38,11 +41,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public abstract class FiniteStateMachine {
+public class FiniteStateMachine {
 
-    public static final String FSM_EVENT_TYPE = "fsmEvent";
     public static final String FSM_IS_IN_TERMINAL_STATE = "fsm is in terminal state";
     private static final Logger LOGGER = LoggerFactory.getLogger(FiniteStateMachine.class);
+    private final Map<String, Consumer<Event>> handlers = new ConcurrentHashMap<>();
     private State currentState;
 
     /**
@@ -91,7 +94,7 @@ public abstract class FiniteStateMachine {
     }
 
     /**
-     * Transfers the FSM to the new state of the specified class.<br/>
+     * Transfers the FSM to the new state of the specified class.<br>
      * This method takes only classes that provide a constructor taking a
      * {@link FiniteStateMachine} instance as a parameter. The
      * {@link IllegalArgumentException} is thrown otherwise.
@@ -127,9 +130,9 @@ public abstract class FiniteStateMachine {
     public void process(byte b) {
         if (currentState == null) {
             LOGGER.debug("{} is in terminal state", this);
-            Event evt = new Event(FSM_IS_IN_TERMINAL_STATE, FSM_EVENT_TYPE);
+            Event evt = new Event(FSM_IS_IN_TERMINAL_STATE);
             evt.setBodyItem("fsm", this);
-            onEvent(evt);
+            handle(evt);
         } else {
             LOGGER.trace("processing of byte {} with {}", b, currentState);
             currentState.process(b);
@@ -160,13 +163,31 @@ public abstract class FiniteStateMachine {
             process(buffer[i]);
         }
     }
+    
+    public synchronized void addHandler(String eventType, Consumer<Event> handler) {
+        if (handlers.containsKey(eventType)) {
+            handlers.put(eventType, handlers.get(eventType).andThen(handler));
+        } else {
+            handlers.put(eventType, handler);
+        }
+    }
 
     /**
-     * Reacts to an event that occurs during processing of input.<br/>
-     * The method is invoked by the state when an event occurs.
+     * Handles an event that occurs during processing of the input.<br>
+     * The method is invoked by the current state of FSM when an event occurs.
      *
      * @param event the event
      */
-    public abstract void onEvent(Event event);
-    
+    public void handle(Event event) {
+        Consumer<Event> handler = handlers.get(event.getType());
+        if (handler == null) {
+            LOGGER.warn(
+                    "Event handler is not registered for {}:{}. The event is ignored.",
+                    event.getType()
+            );
+        } else {
+            handler.accept(event);
+        }
+    }
+
 }

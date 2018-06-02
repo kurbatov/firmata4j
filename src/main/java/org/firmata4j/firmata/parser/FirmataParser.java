@@ -26,33 +26,35 @@ package org.firmata4j.firmata.parser;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.firmata4j.fsm.FiniteStateMachine;
-import org.firmata4j.fsm.Parser;
+import org.firmata4j.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Parses byte-stream of Firmata messages.
  *
- * @author @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
+ * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  * @author Ali Kia
  */
-public abstract class FirmataParser extends FiniteStateMachine implements Parser {
+public class FirmataParser implements Parser {
 
     private Thread parserExecutor;
+    private final FiniteStateMachine fsm;
     private final ArrayBlockingQueue<byte[]> byteQueue = new ArrayBlockingQueue<>(128);
     private final AtomicBoolean running = new AtomicBoolean();
 
     private static final long WAIT_FOR_TERMINATION_DELAY = 3000;
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataParser.class);
 
-    public FirmataParser() {
-        super(WaitingForMessageState.class);
+    public FirmataParser(FiniteStateMachine fsm) {
+        this.fsm = fsm;
     }
 
     @Override
     public void start() {
         if (!running.getAndSet(true)) {
             parserExecutor = new Thread(new JobRunner(), "firmata-parser-thread");
+            parserExecutor.setDaemon(true);
             parserExecutor.start();
         }
     }
@@ -61,16 +63,14 @@ public abstract class FirmataParser extends FiniteStateMachine implements Parser
     public void stop() {
         if (running.getAndSet(false)) {
             byteQueue.clear();
-
             // interrupt the thread to ensure it falls out of the loop
             // and sees the shutdown request
             parserExecutor.interrupt();
-
             try {
                 parserExecutor.join(WAIT_FOR_TERMINATION_DELAY);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new RuntimeException("Parser didn't stop successfully", e);
+                throw new RuntimeException("Parser didn't stop gracefully", e);
             }
         }
     }
@@ -78,7 +78,7 @@ public abstract class FirmataParser extends FiniteStateMachine implements Parser
     @Override
     public void parse(byte[] bytes) {
         if (!byteQueue.offer(bytes)) {
-            LOGGER.warn("Parser reached byte queue limit. Some bytes where skipped.");
+            LOGGER.warn("Parser reached byte queue limit. Some bytes were skipped.");
         }
     }
 
@@ -86,12 +86,12 @@ public abstract class FirmataParser extends FiniteStateMachine implements Parser
 
         @Override
         public void run() {
-            try {
-                while (running.get()) {
-                    process(byteQueue.take());
+            while (running.get()) {
+                try {
+                    fsm.process(byteQueue.take());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
     }

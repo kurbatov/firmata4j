@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractState implements State {
 
-    private FiniteStateMachine fsm;
+    private final FiniteStateMachine fsm;
     private byte[] buffer = new byte[128];
     private int index;
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractState.class);
@@ -76,12 +76,12 @@ public abstract class AbstractState implements State {
      * @param event the event
      */
     protected void publish(Event event) {
-        fsm.onEvent(event);
+        fsm.handle(event);
     }
 
     /**
-     * Stores the byte to the internal buffer to have a chance of getting the
-     * data by a chunk latter.
+     * Stores the byte to the internal buffer in order to get a chunk of data
+     * latter.
      *
      * @param b the byte
      */

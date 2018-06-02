@@ -28,7 +28,7 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;
 
-import static org.firmata4j.firmata.parser.FirmataToken.*;
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 
 /**
  * This state parses the analog message that points an analog input has
@@ -59,7 +59,7 @@ public class ParsingAnalogMessageState extends AbstractState {
                 break;
             case 1:
                 value |= b << 7;
-                Event evt = new Event(ANALOG_MESSAGE_RESPONSE, FIRMATA_MESSAGE_EVENT_TYPE);
+                Event evt = new Event(ANALOG_MESSAGE_RESPONSE);
                 evt.setBodyItem(PIN_ID, portId);
                 evt.setBodyItem(PIN_VALUE, value);
                 publish(evt);

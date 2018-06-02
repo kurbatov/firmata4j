@@ -28,6 +28,7 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;
 
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -57,7 +58,7 @@ public class ParsingCapabilityResponseState extends AbstractState {
                 //every second byte contains mode's resolution of pin
                 supportedModes[i / 2] = buffer[i];
             }
-            Event evt = new Event(PIN_CAPABILITIES_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            Event evt = new Event(PIN_CAPABILITIES_MESSAGE);
             evt.setBodyItem(PIN_ID, pinId);
             evt.setBodyItem(PIN_SUPPORTED_MODES, supportedModes);
             publish(evt);

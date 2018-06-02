@@ -25,11 +25,11 @@ package org.firmata4j.firmata;
 
 import org.firmata4j.*;
 import org.firmata4j.firmata.parser.FirmataParser;
-import org.firmata4j.firmata.parser.FirmataToken;
-import org.firmata4j.transport.SerialTransport;
-import org.firmata4j.fsm.Parser;
+import org.firmata4j.firmata.parser.WaitingForMessageState;
 import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.FiniteStateMachine;
+import org.firmata4j.transport.SerialTransport;
+import org.firmata4j.transport.TransportInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -44,8 +44,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
-import org.firmata4j.transport.TransportInterface;
 
 /**
  * Implements {@link IODevice} that is using Firmata protocol.
@@ -56,6 +56,7 @@ public class FirmataDevice implements IODevice {
 
     private Parser parser;
     private TransportInterface transport;
+    private FiniteStateMachine protocol;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -70,28 +71,51 @@ public class FirmataDevice implements IODevice {
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
     /**
-     * Constructs FirmataDevice instance on specified port.
+     * Constructs FirmataDevice instance on specified serial port.
      *
-     * @param portName the port name the device is connected to
+     * @param portName the serial port name the device is connected to
      */
     public FirmataDevice(String portName) {
         this(new SerialTransport(portName));
     }
 
     /**
-     * Constructs FirmataDevice instance using the specified device;
+     * Constructs FirmataDevice instance using the specified transport.
      *
-     * @param transport the hardware device to use
+     * @param transport the communication channel
      */
     public FirmataDevice(TransportInterface transport) {
-        this.transport = transport;
-        parser = new FirmataParser() {
+        this(transport, new FiniteStateMachine(WaitingForMessageState.class));
+    }
+    
+    /**
+     * Constructs FirmataDevice instance using the specified transport and
+     * protocol.
+     *
+     * @param transport the communication channel
+     * @param protocol finite state machine that can understand the byte stream
+     * from the transport
+     */
+    public FirmataDevice(TransportInterface transport, FiniteStateMachine protocol) {
+        protocol.addHandler(PROTOCOL_MESSAGE, onProtocolReceive);
+        protocol.addHandler(FIRMWARE_MESSAGE, onFirmwareReceive);
+        protocol.addHandler(PIN_CAPABILITIES_MESSAGE, onCapabilitiesReceive);
+        protocol.addHandler(PIN_STATE, onPinStateReceive);
+        protocol.addHandler(ANALOG_MAPPING_MESSAGE, onAnalogMappingReceive);
+        protocol.addHandler(ANALOG_MESSAGE_RESPONSE, onAnalogMessageReceive);
+        protocol.addHandler(DIGITAL_MESSAGE_RESPONSE, onDigitalMessageReceive);
+        protocol.addHandler(I2C_MESSAGE, onI2cMessageReceive);
+        protocol.addHandler(STRING_MESSAGE, onStringMessageReceive);
+        protocol.addHandler(FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE, new Consumer<Event>() {
             @Override
-            public void onEvent(Event event) {
-                handleEvent(event);
+            public void accept(Event t) {
+                LOGGER.error("Parser has reached the terminal state. It may be due receiving of unsupported command.");
             }
-        };
+        });
+        parser = new FirmataParser(protocol);
         transport.setParser(parser);
+        this.protocol = protocol;
+        this.transport = transport;
     }
 
     @Override
@@ -121,8 +145,8 @@ public class FirmataDevice implements IODevice {
                 transport.start();
                 sendMessage(FirmataMessageFactory.REQUEST_FIRMWARE);
             } catch (IOException ex) {
-                parser.stop();
                 transport.stop();
+                parser.stop();
                 throw ex;
             }
         }
@@ -201,9 +225,14 @@ public class FirmataDevice implements IODevice {
     public String getProtocol() {
         return MessageFormat.format(
                 "{0} - {1}.{2}",
-                firmwareInfo.get(FirmataToken.FIRMWARE_NAME),
-                firmwareInfo.get(FirmataToken.FIRMWARE_MAJOR),
-                firmwareInfo.get(FirmataToken.FIRMWARE_MINOR));
+                firmwareInfo.get(FIRMWARE_NAME),
+                firmwareInfo.get(FIRMWARE_MAJOR),
+                firmwareInfo.get(FIRMWARE_MINOR));
+    }
+
+    @Override
+    public void addProtocolMessageHandler(String messageType, Consumer<Event> handler) {
+        protocol.addHandler(messageType, handler);
     }
     
     //TODO add get firmware method
@@ -279,201 +308,172 @@ public class FirmataDevice implements IODevice {
 
     /**
      * Describes reaction to protocol receiving.
-     *
-     * @param event the event of receiving protocol version
      */
-    private void onProtocolReceive(Event event) {
-        if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
-            LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of firmata4j ({}.{}).",
-                    event.getBodyItem(PROTOCOL_MAJOR),
-                    event.getBodyItem(PROTOCOL_MINOR),
-                    FIRMATA_MAJOR_VERSION,
-                    FIRMATA_MINOR_VERSION);
-        } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
-            LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by firmata4j ({}.{})."
-                            + " Though these are compatible you may experience some issues.",
-                    event.getBodyItem(PROTOCOL_MAJOR),
-                    event.getBodyItem(PROTOCOL_MINOR),
-                    FIRMATA_MAJOR_VERSION,
-                    FIRMATA_MINOR_VERSION);
+    private final Consumer<Event> onProtocolReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
+                LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of firmata4j ({}.{}).",
+                        event.getBodyItem(PROTOCOL_MAJOR),
+                        event.getBodyItem(PROTOCOL_MINOR),
+                        FIRMATA_MAJOR_VERSION,
+                        FIRMATA_MINOR_VERSION);
+            } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
+                LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by firmata4j ({}.{})."
+                                + " Though these are compatible you may experience some issues.",
+                        event.getBodyItem(PROTOCOL_MAJOR),
+                        event.getBodyItem(PROTOCOL_MINOR),
+                        FIRMATA_MAJOR_VERSION,
+                        FIRMATA_MINOR_VERSION);
+            }
         }
-    }
+    };
 
     /**
      * Describes reaction to firmware data receiving.
-     *
-     * @param event the event of receiving firmware data
      */
-    private void onFirmwareReceive(Event event) {
-        firmwareInfo = event.getBody();
-        try {
-            sendMessage(FirmataMessageFactory.REQUEST_CAPABILITY);
-        } catch (IOException ex) {
-            LOGGER.error("Error requesting device capabilities.", ex);
+    private final Consumer<Event> onFirmwareReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            firmwareInfo = event.getBody();
+            try {
+                sendMessage(FirmataMessageFactory.REQUEST_CAPABILITY);
+            } catch (IOException ex) {
+                LOGGER.error("Error requesting device capabilities.", ex);
+            }
         }
-    }
+    };
 
     /**
      * Describes reaction to capabilities data receiving.
-     *
-     * @param event the event of receiving capabilities data
      */
-    private void onCapabilitiesReceive(Event event) {
-        byte pinId = (Byte) event.getBodyItem(PIN_ID);
-        FirmataPin pin = new FirmataPin(this, pinId);
-        for (byte i : (byte[]) event.getBodyItem(PIN_SUPPORTED_MODES)) {
-            pin.addSupprotedMode(Pin.Mode.resolve(i));
-        }
-        pins.add(pin.getIndex(), pin);
-        if (pin.getSupportedModes().isEmpty()) {
-            // if the pin has no supported modes, its initialization is already done
-            initializedPins.incrementAndGet();
-        } else {
-            // if the pin supports some modes, we ask for its current mode and value
-            try {
-                sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
-            } catch (IOException ex) {
-                LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
+    private final Consumer<Event> onCapabilitiesReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            byte pinId = (Byte) event.getBodyItem(PIN_ID);
+            FirmataPin pin = new FirmataPin(FirmataDevice.this, pinId);
+            for (byte i : (byte[]) event.getBodyItem(PIN_SUPPORTED_MODES)) {
+                pin.addSupprotedMode(Pin.Mode.resolve(i));
+            }
+            pins.add(pin.getIndex(), pin);
+            if (pin.getSupportedModes().isEmpty()) {
+                // if the pin has no supported modes, its initialization is already done
+                initializedPins.incrementAndGet();
+            } else {
+                // if the pin supports some modes, we ask for its current mode and value
+                try {
+                    sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
+                } catch (IOException ex) {
+                    LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
+                }
             }
         }
-    }
+    };
 
     /**
      * Describes reaction to the pin state data receiving.
-     *
-     * @param event the event of receiving pin state data
      */
-    private void onPinStateReceive(Event event) {
-        byte pinId = (Byte) event.getBodyItem(PIN_ID);
-        FirmataPin pin = pins.get(pinId);
-        if (pin.getMode() == null) {
-            pin.initMode(Pin.Mode.resolve((Byte) event.getBodyItem(PIN_MODE)));
-            pin.initValue((Long) event.getBodyItem(PIN_VALUE));
-        } else {
-            pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
-        }
-        if (initializedPins.incrementAndGet() == pins.size()) {
-            try {
-                sendMessage(FirmataMessageFactory.ANALOG_MAPPING_REQUEST);
-            } catch (IOException e) {
-                LOGGER.error("Error on request analog mapping", e);
+    private final Consumer<Event> onPinStateReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            byte pinId = (Byte) event.getBodyItem(PIN_ID);
+            FirmataPin pin = pins.get(pinId);
+            if (pin.getMode() == null) {
+                pin.initMode(Pin.Mode.resolve((Byte) event.getBodyItem(PIN_MODE)));
+                pin.initValue((Long) event.getBodyItem(PIN_VALUE));
+            } else {
+                pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
+            }
+            if (initializedPins.incrementAndGet() == pins.size()) {
+                try {
+                    sendMessage(FirmataMessageFactory.ANALOG_MAPPING_REQUEST);
+                } catch (IOException e) {
+                    LOGGER.error("Error on request analog mapping", e);
+                }
             }
         }
-    }
+    };
 
     /**
      * Describes reaction to the analog mapping data receiving.
-     *
-     * @param event the event of receiving analog mapping data
      */
-    @SuppressWarnings("unchecked")
-    private void onAnalogMappingReceive(Event event) {
-        analogMapping = (Map<Integer, Integer>) event.getBodyItem(ANALOG_MAPPING);
-        try {
-            sendMessage(FirmataMessageFactory.analogReport(true));
-            sendMessage(FirmataMessageFactory.digitalReport(true));
-        } catch (IOException ex) {
-            LOGGER.error("Cannot enable reporting from device", ex);
+    private final Consumer<Event> onAnalogMappingReceive = new Consumer<Event>() {
+        @Override
+        @SuppressWarnings("unchecked")
+        public void accept(Event event) {
+            analogMapping = (Map<Integer, Integer>) event.getBodyItem(ANALOG_MAPPING);
+            try {
+                sendMessage(FirmataMessageFactory.analogReport(true));
+                sendMessage(FirmataMessageFactory.digitalReport(true));
+            } catch (IOException ex) {
+                LOGGER.error("Cannot enable reporting from device", ex);
+            }
+            ready.set(true);
+            // all the pins are initialized so notification is sent to listeners
+            IOEvent initIsDone = new IOEvent(FirmataDevice.this);
+            for (IODeviceEventListener l : listeners) {
+                l.onStart(initIsDone);
+            }
         }
-        ready.set(true);
-        // all the pins are initialized so notification is sent to listeners
-        IOEvent initIsDone = new IOEvent(this);
-        for (IODeviceEventListener l : listeners) {
-            l.onStart(initIsDone);
-        }
-    }
+    };
 
     /**
      * Describes reaction to the analog message data receiving.
-     *
-     * @param event the event of receiving analog message data
      */
-    private void onAnalogMessageReceive(Event event) {
-        int analogId = (Integer) event.getBodyItem(PIN_ID);
-        if (analogMapping != null && analogMapping.get(analogId) != null) {
-            int pinId = analogMapping.get(analogId);
+    private final Consumer<Event> onAnalogMessageReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            int analogId = (Integer) event.getBodyItem(PIN_ID);
+            if (analogMapping != null && analogMapping.get(analogId) != null) {
+                int pinId = analogMapping.get(analogId);
+                if (pinId < pins.size()) {
+                    FirmataPin pin = pins.get(pinId);
+                    if (Pin.Mode.ANALOG.equals(pin.getMode())) {
+                        pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
+                    }
+                }
+            }
+        }
+    };
+
+    /**
+     * Describes reaction to the digital message data receiving.
+     */
+    private final Consumer<Event> onDigitalMessageReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            int pinId = (Integer) event.getBodyItem(PIN_ID);
             if (pinId < pins.size()) {
                 FirmataPin pin = pins.get(pinId);
-                if (Pin.Mode.ANALOG.equals(pin.getMode())) {
+                if (Pin.Mode.INPUT.equals(pin.getMode()) ||
+                        Pin.Mode.PULLUP.equals(pin.getMode())) {
                     pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
                 }
             }
         }
-    }
+    };
 
-    /**
-     * Describes reaction to the digital message data receiving.
-     *
-     * @param event the event of receiving digital message data
-     */
-    private void onDigitalMessageReceive(Event event) {
-        int pinId = (Integer) event.getBodyItem(PIN_ID);
-        if (pinId < pins.size()) {
-            FirmataPin pin = pins.get(pinId);
-            if (Pin.Mode.INPUT.equals(pin.getMode()) ||
-                    Pin.Mode.PULLUP.equals(pin.getMode())) {
-                pin.updateValue((Integer) event.getBodyItem(PIN_VALUE));
+    private final Consumer<Event> onI2cMessageReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            byte address = (Byte) event.getBodyItem(I2C_ADDRESS);
+            int register = (Integer) event.getBodyItem(I2C_REGISTER);
+            byte[] message = (byte[]) event.getBodyItem(I2C_MESSAGE);
+            FirmataI2CDevice device = i2cDevices.get(address);
+            if (device != null) {
+                device.onReceive(register, message);
             }
         }
-    }
+    };
 
-    private void onI2cMessageReceive(Event event) {
-        byte address = (Byte) event.getBodyItem(I2C_ADDRESS);
-        int register = (Integer) event.getBodyItem(I2C_REGISTER);
-        byte[] message = (byte[]) event.getBodyItem(I2C_MESSAGE);
-        FirmataI2CDevice device = i2cDevices.get(address);
-        if (device != null) {
-            device.onReceive(register, message);
+    private final Consumer<Event> onStringMessageReceive = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            String message = (String) event.getBodyItem(STRING_MESSAGE);
+            IOEvent evt = new IOEvent(FirmataDevice.this);
+            for (IODeviceEventListener listener : listeners) {
+                listener.onMessageReceive(evt, message);
+            }
         }
-    }
-
-    private void onStringMessageReceive(Event event) {
-        String message = (String) event.getBodyItem(STRING_MESSAGE);
-        IOEvent evt = new IOEvent(this);
-        for (IODeviceEventListener listener : listeners) {
-            listener.onMessageReceive(evt, message);
-        }
-    }
-
-    protected void handleEvent(Event event) {
-        LOGGER.debug("Event name: {}, type: {}, timestamp: {}", event.getName(), event.getType(), event.getTimestamp());
-        for (Map.Entry<String, Object> entry : event.getBody().entrySet()) {
-            LOGGER.debug("{}: {}", entry.getKey(), entry.getValue());
-        }
-        LOGGER.debug("\n");
-        switch (event.getName()) {
-            case PROTOCOL_MESSAGE:
-                onProtocolReceive(event);
-                break;
-            case FIRMWARE_MESSAGE:
-                onFirmwareReceive(event);
-                break;
-            case PIN_CAPABILITIES_MESSAGE:
-                onCapabilitiesReceive(event);
-                break;
-            case PIN_STATE:
-                onPinStateReceive(event);
-                break;
-            case ANALOG_MAPPING_MESSAGE:
-                onAnalogMappingReceive(event);
-                break;
-            case ANALOG_MESSAGE_RESPONSE:
-                onAnalogMessageReceive(event);
-                break;
-            case DIGITAL_MESSAGE_RESPONSE:
-                onDigitalMessageReceive(event);
-                break;
-            case STRING_MESSAGE:
-                onStringMessageReceive(event);
-                break;
-            case I2C_MESSAGE:
-                onI2cMessageReceive(event);
-                break;
-            case FiniteStateMachine.FSM_IS_IN_TERMINAL_STATE:
-                // should never happen but who knows
-                throw new IllegalStateException("Parser has reached the terminal state. It may be due receiving of unsupported command.");
-            default:
-                LOGGER.warn("event {} handler not implemented. will ignore event", event.getName());
-        }
-    }
+    };
 }

@@ -21,38 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.firmata4j.fsm;
+package org.firmata4j.firmata.parser;
+
+import org.firmata4j.fsm.AbstractState;
+import org.firmata4j.fsm.Event;
+import org.firmata4j.fsm.FiniteStateMachine;
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
+import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
- * Parses a byte-stream converting it to the events determined by the underlying
- * protocol.
+ * This state collects raw binary data until it receives {@code SYSEX_END}
+ * message and publishes it as a {@code SYSEX_CUSTOM_MESSAGE} event.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
-public interface Parser {
+public class ParsingCustomSysexMessageState extends AbstractState {
 
-    /**
-     * Starts processing of input data.
-     */
-    void start();
+    public ParsingCustomSysexMessageState(FiniteStateMachine fsm) {
+        super(fsm);
+    }
 
-    /**
-     * Stops processing of input data.
-     */
-    void stop();
-
-    /**
-     * Processes the input data.
-     *
-     * @param bytes the data
-     */
-    void parse(byte[] bytes);
-
-    /**
-     * Reacts to an event that occurs during processing of input.
-     *
-     * @param event the event
-     */
-    void onEvent(Event event);
+    @Override
+    public void process(byte b) {
+        if (b == END_SYSEX) {
+            Event event = new Event(SYSEX_CUSTOM_MESSAGE);
+            event.setBodyItem(SYSEX_CUSTOM_MESSAGE, getBuffer());
+            transitTo(WaitingForMessageState.class);
+            publish(event);
+        } else {
+            bufferize(b);
+        }
+    }
 
 }

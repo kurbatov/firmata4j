@@ -24,7 +24,7 @@
 package org.firmata4j.transport;
 
 import java.io.IOException;
-import org.firmata4j.fsm.Parser;
+import org.firmata4j.Parser;
 
 /**
  * Interface to abstract the device connection (serial/network) to a device.

@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import org.firmata4j.fsm.Parser;
+import org.firmata4j.Parser;
 
 /**
  * Allows connections over the network.

@@ -36,73 +36,40 @@ import java.util.Map;
 public class Event {
 
     private final long timestamp;
-    private final String name;
     private final String type;
     private final Map<String, Object> body;
 
     /**
-     * Constructs the event of unspecified type and without a name.
+     * Constructs the event of unspecified type.
      */
     public Event() {
         timestamp = System.currentTimeMillis();
-        name = "unspecified";
         type = "unspecified";
         body = new HashMap<>();
     }
 
     /**
-     * Constructs the event of specified type with specified name.
+     * Constructs the event of specified type.
      *
-     * @param name the name of the event
      * @param type the type of the event
      */
-    public Event(String name, String type) {
+    public Event(String type) {
         timestamp = System.currentTimeMillis();
-        this.name = name;
-        this.type = type;
-        body = new HashMap<>();
-    }
-    
-    /**
-     * Constructs the event of specified type with specified name.
-     *
-     * @param name the name of the event
-     * @param type the type of the event
-     */
-    public Event(String name, String type, long timestamp) {
-        this.timestamp = timestamp;
-        this.name = name;
         this.type = type;
         body = new HashMap<>();
     }
 
     /**
-     * Constructs the event of specified type with specified name. This
+     * Constructs the event of specified type with specified type. This
      * constructor allows to set the body of event at once.
      *
-     * @param name the name of the event
      * @param type the type of the event
      * @param body the event's body
      */
-    public Event(String name, String type, Map<String, Object> body) {
+    public Event(String type, Map<String, Object> body) {
         timestamp = System.currentTimeMillis();
-        this.name = name;
         this.type = type;
         this.body = new HashMap<>(body);
-    }
-
-    /**
-     * Returns the name of the event.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Returns the timestamp of the event.
-     */
-    public long getTimestamp() {
-        return timestamp;
     }
 
     /**
@@ -110,6 +77,13 @@ public class Event {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Returns the timestamp of the event.
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 
     /**

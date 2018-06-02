@@ -29,6 +29,7 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;
 
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -65,11 +66,11 @@ public class WaitingForMessageState extends AbstractState {
                 transitTo(ParsingSysexMessageState.class);
                 break;
             case SYSTEM_RESET:
-                publish(new Event(SYSTEM_RESET_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE));
+                publish(new Event(SYSTEM_RESET_MESSAGE));
                 break;
             default:
                 //skip non control token
-                Event evt = new Event(ERROR_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+                Event evt = new Event(ERROR_MESSAGE);
                 evt.setBodyItem(ERROR_DESCRIPTION, String.format("Unknown control token has been received. Skipping. 0x%2X", b));
                 publish(evt);
         }

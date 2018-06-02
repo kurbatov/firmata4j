@@ -28,7 +28,7 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;
 
-import static org.firmata4j.firmata.parser.FirmataToken.*;
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 
 /**
  * This state parses version report message that contains the version of the
@@ -52,7 +52,7 @@ public class ParsingVersionMessageState extends AbstractState {
             counter++;
         } else {
             int minor = b;
-            Event event = new Event(PROTOCOL_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            Event event = new Event(PROTOCOL_MESSAGE);
             event.setBodyItem(PROTOCOL_MAJOR, major);
             event.setBodyItem(PROTOCOL_MINOR, minor);
             transitTo(WaitingForMessageState.class);

@@ -28,6 +28,7 @@ import org.firmata4j.fsm.Event;
 import org.firmata4j.fsm.AbstractState;
 import org.firmata4j.fsm.FiniteStateMachine;
 
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -51,7 +52,7 @@ public class ParsingFirmwareMessageState extends AbstractState {
             int major = buffer[0];
             int minor = buffer[1];
             String name = decode(buffer, 2, buffer.length - 2);
-            Event event = new Event(FIRMWARE_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            Event event = new Event(FIRMWARE_MESSAGE);
             event.setBodyItem(FIRMWARE_MAJOR, major);
             event.setBodyItem(FIRMWARE_MINOR, minor);
             event.setBodyItem(FIRMWARE_NAME, name);

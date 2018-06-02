@@ -30,6 +30,7 @@ import org.firmata4j.fsm.FiniteStateMachine;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.firmata4j.firmata.parser.FirmataEventType.*;
 import static org.firmata4j.firmata.parser.FirmataToken.*;
 
 /**
@@ -52,7 +53,7 @@ public class ParsingAnalogMappingState extends AbstractState {
     @Override
     public void process(byte b) {
         if (b == END_SYSEX) {
-            Event evt = new Event(ANALOG_MAPPING_MESSAGE, FIRMATA_MESSAGE_EVENT_TYPE);
+            Event evt = new Event(ANALOG_MAPPING_MESSAGE);
             evt.setBodyItem(ANALOG_MAPPING, mapping);
             publish(evt);
             transitTo(WaitingForMessageState.class);
