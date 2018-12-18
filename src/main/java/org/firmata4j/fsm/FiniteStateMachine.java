@@ -26,6 +26,7 @@ package org.firmata4j.fsm;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import org.firmata4j.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ public class FiniteStateMachine {
     public static final String FSM_IS_IN_TERMINAL_STATE = "fsm is in terminal state";
     private static final Logger LOGGER = LoggerFactory.getLogger(FiniteStateMachine.class);
     private final Map<String, Consumer<Event>> handlers = new ConcurrentHashMap<>();
+    private Executor eventHandlingExecutor = DirectExecutor.INSTANCE;
     private State currentState;
 
     /**
@@ -82,6 +84,15 @@ public class FiniteStateMachine {
         } catch (ReflectiveOperationException ex) {
             throw new IllegalArgumentException("Cannot instantiate the initial state", ex);
         }
+    }
+
+    /**
+     * Assigns an executor responsible for performing event hanling.
+     *
+     * @param executor the executor that will perform event handling
+     */
+    public void setEventHandlingExecutor(Executor executor) {
+        this.eventHandlingExecutor = executor;
     }
 
     /**
@@ -164,6 +175,15 @@ public class FiniteStateMachine {
         }
     }
     
+    /**
+     * Adds a handler for specified event type.
+     *
+     * If there already is aanother handler for that event type, this handler
+     * gets added to the end of handler chain.
+     *
+     * @param eventType type of event the handler is supposed to deal with
+     * @param handler an object that gets an event to process
+     */
     public synchronized void addHandler(String eventType, Consumer<Event> handler) {
         if (handlers.containsKey(eventType)) {
             handlers.put(eventType, handlers.get(eventType).andThen(handler));
@@ -178,15 +198,20 @@ public class FiniteStateMachine {
      *
      * @param event the event
      */
-    public void handle(Event event) {
-        Consumer<Event> handler = handlers.get(event.getType());
+    public void handle(final Event event) {
+        final Consumer<Event> handler = handlers.get(event.getType());
         if (handler == null) {
             LOGGER.warn(
                     "Event handler is not registered for {}:{}. The event is ignored.",
                     event.getType()
             );
         } else {
-            handler.accept(event);
+            eventHandlingExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    handler.accept(event);
+                }
+            });
         }
     }
 

@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.firmata4j.firmata.parser.FirmataEventType.*;
@@ -97,6 +98,7 @@ public class FirmataDevice implements IODevice {
      * from the transport
      */
     public FirmataDevice(TransportInterface transport, FiniteStateMachine protocol) {
+        protocol.setEventHandlingExecutor(Executors.newSingleThreadExecutor(new DaemonThreadFactory("firmata-event-handler")));
         protocol.addHandler(PROTOCOL_MESSAGE, onProtocolReceive);
         protocol.addHandler(FIRMWARE_MESSAGE, onFirmwareReceive);
         protocol.addHandler(PIN_CAPABILITIES_MESSAGE, onCapabilitiesReceive);
@@ -363,8 +365,22 @@ public class FirmataDevice implements IODevice {
                 // if the pin supports some modes, we ask for its current mode and value
                 try {
                     sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
+                    if (pinId > 0 && pinId % 14 == 0) { // 14 pins on Arduino UNO get initialized without delay
+                        /* If the pin count is too high (i.e. Arduino Mega), then 
+                        * too many firmata requests in a row can overflow the 
+                        * device's serial input buffer. 
+                        * One solution is to yield a little time between
+                        * requests to allow the device to respond. The response 
+                        * may then safely sit in the host's much larger serial 
+                        * input buffer until it is dealt with by onPinStateReceive
+                        */
+                        Thread.sleep(10);
+                    }
                 } catch (IOException ex) {
                     LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    LOGGER.warn("Delay between capability requests was interrupted", ex);
                 }
             }
         }
