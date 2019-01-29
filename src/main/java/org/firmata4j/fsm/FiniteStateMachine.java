@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Finite State Machine base implementation.<br>
- * It leaves implementation of event handling in
- * {@link #onEvent(org.firmata4j.fsm.Event)} method to the user.<br>
  * The finite state machine is not thread-safe by its nature. This
  * implementation does not cope with simultaneously received bytes. The bytes
  * have to be fed to the FSM one by one in a single thread that should define
@@ -46,7 +44,7 @@ public class FiniteStateMachine {
 
     public static final String FSM_IS_IN_TERMINAL_STATE = "fsm is in terminal state";
     private static final Logger LOGGER = LoggerFactory.getLogger(FiniteStateMachine.class);
-    private final Map<String, Consumer<Event>> handlers = new ConcurrentHashMap<>();
+    private final Map<String, Consumer<Event>> handlers;
     private Executor eventHandlingExecutor = DirectExecutor.INSTANCE;
     private State currentState;
 
@@ -57,15 +55,13 @@ public class FiniteStateMachine {
      * {@link #transitTo(org.firmata4j.fsm.State)}.
      */
     public FiniteStateMachine() {
-    }
-
-    /**
-     * Constructs the finite state machine in the specified state.
-     *
-     * @param initialState initial state of the FSM
-     */
-    public FiniteStateMachine(State initialState) {
-        currentState = initialState;
+        handlers = new ConcurrentHashMap<>();
+        handlers.put("*", new Consumer<Event>() {
+            @Override
+            public void accept(Event t) {
+                // default wildcard handler does nothing
+            }
+        });
     }
 
     /**
@@ -78,6 +74,7 @@ public class FiniteStateMachine {
      */
     @SuppressWarnings("LeakingThisInConstructor")
     public FiniteStateMachine(Class<? extends State> stateClass) {
+        this();
         try {
             // LeakingThisInConstructor is suppresed since the state instance doesn't run its own thread
             currentState = stateClass.getConstructor(FiniteStateMachine.class).newInstance(this);
@@ -213,6 +210,12 @@ public class FiniteStateMachine {
                 }
             });
         }
+        eventHandlingExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                handlers.get("*").accept(event);
+            }
+        });
     }
 
 }

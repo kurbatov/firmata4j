@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,8 @@ package org.firmata4j.firmata.parser;
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
 public interface FirmataEventType {
+    
+    String ANY = "*";
     
     String PROTOCOL_MESSAGE = "protocolMessage";
     String PROTOCOL_MAJOR = "major";

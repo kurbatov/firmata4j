@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,12 +38,12 @@ import org.firmata4j.fsm.Event;
 public interface IODevice {
 
     /**
-     * Initiates communication with hardware.<br/>
+     * Initiates communication with hardware.<br>
      * This method initialize the {@link IODevice} instance. Initialization may
-     * take some time depending on speed of communication to hardware.<br/>
-     * To check whether the device is ready, use {@link #isReady()}.<br/>
+     * take some time depending on speed of communication to hardware.<br>
+     * To check whether the device is ready, use {@link #isReady()}.<br>
      * If you want to wait until the device is initializing and continue working
-     * with it, use {@link #ensureInitializationIsDone()}.<br/>
+     * with it, use {@link #ensureInitializationIsDone()}.<br>
      * If you develop application in asynchronous style, you may want to
      * register an event listener that will receive a message when the device is
      * ready.
@@ -138,6 +138,9 @@ public interface IODevice {
     
     /**
      * Adds handler for low-level events of specified type.
+     *
+     * "*" is a special type that matches to any message. The handlers registed
+     * for that type will receive an even after the hadlers of specific type.
      *
      * @param messageType type of low-level event
      * @param handler handler of the event
