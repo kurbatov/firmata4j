@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -81,23 +81,13 @@ public class FirmataDevice implements IODevice {
     }
 
     /**
-     * Constructs FirmataDevice instance using the specified transport.
+     * Constructs FirmataDevice instance that operates on default protocol
+     * using specified transport.
      *
      * @param transport the communication channel
      */
     public FirmataDevice(TransportInterface transport) {
-        this(transport, new FiniteStateMachine(WaitingForMessageState.class));
-    }
-    
-    /**
-     * Constructs FirmataDevice instance using the specified transport and
-     * protocol.
-     *
-     * @param transport the communication channel
-     * @param protocol finite state machine that can understand the byte stream
-     * from the transport
-     */
-    public FirmataDevice(TransportInterface transport, FiniteStateMachine protocol) {
+        protocol = new FiniteStateMachine(WaitingForMessageState.class);
         protocol.setEventHandlingExecutor(Executors.newSingleThreadExecutor(new DaemonThreadFactory("firmata-event-handler")));
         protocol.addHandler(PROTOCOL_MESSAGE, onProtocolReceive);
         protocol.addHandler(FIRMWARE_MESSAGE, onFirmwareReceive);
@@ -114,6 +104,20 @@ public class FirmataDevice implements IODevice {
                 LOGGER.error("Parser has reached the terminal state. It may be due receiving of unsupported command.");
             }
         });
+        parser = new FirmataParser(protocol);
+        transport.setParser(parser);
+        this.transport = transport;
+    }
+    
+    /**
+     * Constructs FirmataDevice instance using the specified transport and
+     * protocol.
+     *
+     * @param transport the communication channel
+     * @param protocol finite state machine that can understand the byte stream
+     * from the transport
+     */
+    public FirmataDevice(TransportInterface transport, FiniteStateMachine protocol) {
         parser = new FirmataParser(protocol);
         transport.setParser(parser);
         this.protocol = protocol;
