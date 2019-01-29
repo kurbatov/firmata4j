@@ -57,7 +57,7 @@ public class FirmataWatchdog extends Consumer<Event> {
 
     private final Runnable action;
 
-    private final AtomicBoolean active = new AtomicBoolean(true);
+    private final AtomicBoolean active = new AtomicBoolean(false);
 
     private volatile long lastTimestamp = 0;
 
@@ -81,7 +81,7 @@ public class FirmataWatchdog extends Consumer<Event> {
     @Override
     public void accept(Event evt) {
         if (lastTimestamp == 0) { // got fitst event
-            EXECUTOR.schedule(watch, timeout, UNIT);
+            enable();
         }
         lastTimestamp = evt.getTimestamp();
     }
@@ -91,11 +91,17 @@ public class FirmataWatchdog extends Consumer<Event> {
     }
 
     public void setActive(boolean active) {
-        this.active.set(active);
+        if (active) {
+            enable();
+        } else {
+            disable();
+        }
     }
 
     public void enable() {
-        active.set(true);
+        if (!active.getAndSet(true)) {
+            EXECUTOR.schedule(watch, timeout, UNIT);
+        }
     }
 
     public void disable() {
