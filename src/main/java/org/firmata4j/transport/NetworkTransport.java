@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2018 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import org.firmata4j.Parser;
 
 /**
@@ -46,6 +47,29 @@ public class NetworkTransport implements TransportInterface {
     private final InetAddress ip;
     private final int port;
 
+    /**
+     * Creates network transport using a sting as address.
+     *
+     * Address should specify host and port. Examples:
+     * <ul>
+     *   <li>"192.168.1.10:36363"</li>
+     *   <li>"explorer-bot.local:72727"</li>
+     * </ul>
+     * @param address host and port
+     */
+    public NetworkTransport(String address) {
+        String[] parts = address.split(":");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Address must specify host and port but received " + address);
+        }
+        try {
+            this.ip = InetAddress.getByName(parts[0]);
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(e);
+        }
+        this.port = Integer.valueOf(parts[1]);
+    }
+    
     public NetworkTransport(InetAddress ip, int port) {
         this.ip = ip;
         this.port = port;
@@ -60,7 +84,7 @@ public class NetworkTransport implements TransportInterface {
         socket.setSoTimeout(1500);
         out = new DataOutputStream(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
-        readerThread = new Thread(new Reader(), "network-transport-reader");
+        readerThread = new Thread(new Reader(), "firmata-network-transport");
         readerThread.start();
     }
 
