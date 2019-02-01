@@ -36,18 +36,20 @@ import org.firmata4j.fsm.Event;
  *
  * It gets activated by the first event received since the watchdog subscribed.
  *
- * Example:
+ * <p>Example:
  * <pre>
+ * IODevice device = new FirmataDevice(port);
+ * //...
  * FirmataWatchdog watchdog = new FirmataWatchdog(3000, new Runnable() {
- *     @Override
  *     public void run() {
  *         // do something when there were no low-level events during 3000 milliseconds
- *         }
- *     });
+ *     }
+ * });
  * device.addProtocolMessageHandler(FirmataEventType.ANY, watchdog);
  * //...
  * device.start();
  * </pre>
+ * </p>
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */

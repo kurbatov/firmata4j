@@ -21,14 +21,16 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.6</version>
+    <version>2.3.7</version>
 </dependency>
 ```
 
 ## Usage
 General scenario of usage is following:
 ```java
-IODevice device = new FirmataDevice("/dev/ttyUSB0"); // construct the Firmata device instance using the name of a port
+// construct a Firmata device instance
+IODevice device = new FirmataDevice("/dev/ttyUSB0"); // using the name of a port
+// IODevice device = new FirmataDevice(new NetworkTransport("192.168.1.18:4334")); // using a network address
 // subscribe to events using device.addEventListener(...);
 // and/or device.getPin(n).addEventListener(...);
 device.start(); // initiate communication to the device
@@ -103,22 +105,6 @@ pin.setMode(Pin.Mode.OUTPUT); // our listeners will get event about this change
 pin.setValue(1); // and then about this change
 ```
 
-You can get visual representation of device's pins using `JPinboard` Swing component.
-
-```java
-JPinboard pinboard = new JPinboard(device);
-JFrame frame = new JFrame("Pinboard Example");
-frame.add(pinboard);
-frame.pack();
-frame.setVisible(true);
-```
-
-`JPinboard` allows setting the pin's mode by choosing one from a context menu of
-the pin. State of the output pin can be changed by double clicking on it.
-
-An example of `JPinboard` usage can be found in
-[`org.firmata4j.Example` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
-
 ## I2C
 **firmata4j** supports working with I2C devices. You can obtain a reference to
 an I2C device in this way:
@@ -134,6 +120,69 @@ You may find convenient writing a wrapper for [`I2CDevice` class](https://github
 to facilitate communication with I2C device. Consider [`SSD1306`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/ssd1306/SSD1306.java)
 and [`I2CExample`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CExample.java)
 classes as an example of that approach.
+
+## Low-Level Messages and Events
+
+**firmata4j** allows sending an arbitrary binary message to the device. For
+example, setting sampling intervall using a low-level message:
+
+```java
+device.sendMessage(FirmataMessageFactory.setSamplingInterval(12));
+```
+
+Low-level event handlers are supported as well. Those may be useful for
+debugging or processing custom messages from a device with modified protocol
+implementation.
+
+```java
+device.addProtocolMessageHandler(FirmataEventType.SYSEX_CUSTOM_MESSAGE, new Consumer<Event>() {
+    @Override
+    public void accept(Event evt) {
+        byte[] message = (byte[]) evt.getBodyItem(FirmataEventType.SYSEX_CUSTOM_MESSAGE);
+        byte messageType = message[0];
+        // and so on
+    }
+});
+```
+
+## Watchdog
+
+Low-level event handlers allow regestering a watchdog:
+
+```java
+IODevice device = new FirmataDevice(port);
+//...
+FirmataWatchdog watchdog = new FirmataWatchdog(3000, new Runnable() {
+    @Override
+    public void run() {
+        // do something when there were no low-level events during 3000 milliseconds
+    }
+});
+device.addProtocolMessageHandler(FirmataEventType.ANY, watchdog);
+//...
+device.start();
+```
+
+This watchdog implementation gets activated by the first received message since
+it subscribed. That's why it should be registered before communication starts.
+
+## Visualization
+
+You can get visual representation of device's pins using `JPinboard` Swing component.
+
+```java
+JPinboard pinboard = new JPinboard(device);
+JFrame frame = new JFrame("Pinboard Example");
+frame.add(pinboard);
+frame.pack();
+frame.setVisible(true);
+```
+
+`JPinboard` allows setting the pin's mode by choosing one from a context menu of
+the pin. State of the output pin can be changed by double clicking on it.
+
+An example of `JPinboard` usage can be found in
+[`org.firmata4j.Example` class](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
 
 ## Versions
 **firmata4j** sticks to Firmata protocol versions. The first available version

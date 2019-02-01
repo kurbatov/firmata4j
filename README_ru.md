@@ -22,14 +22,16 @@ Java.
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.6</version>
+    <version>2.3.7</version>
 </dependency>
 ```
 
 ## Использование
 Основной сценарий использования:
 ```java
-IODevice device = new FirmataDevice("/dev/ttyUSB0"); // создать экземпляр устройства Firmata используя имя порта
+// создать экземпляр устройства Firmata
+IODevice device = new FirmataDevice("/dev/ttyUSB0"); // используя имя порта
+// IODevice device = new FirmataDevice(new NetworkTransport("192.168.1.18:4334")); // используя сетевой адрес
 // подписаться на события при помощи device.addEventListener(...);
 // и/или device.getPin(n).addEventListener(...);
 device.start(); // начать обмен сообщениями с устройствами
@@ -105,23 +107,6 @@ pin.setMode(Pin.Mode.OUTPUT); // наши обработчики получат 
 pin.setValue(1); // ... а после и об этом изменении
 ```
 
-Визуальное представление состояний портов устройства можно получить при помощи
-компонента `JPinboard`.
-
-```java
-JPinboard pinboard = new JPinboard(device);
-JFrame frame = new JFrame("Pinboard Example");
-frame.add(pinboard);
-frame.pack();
-frame.setVisible(true);
-```
-
-`JPinboard` позволяет установить режим порта из контекстного меню. Состояние
-порта вывода может быть изменено двойным щелчком на его изображении.
-
-Пример использования `JPinboard` может быть найден в классе
-[`org.firmata4j.Example`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
-
 ## I2C
 **firmata4j** поддерживает взаимодействие с I2C устройствами. Получить ссылку на
 I2C устройство можно следующим способом:
@@ -139,6 +124,72 @@ I2CDevice i2cDevice = device.getI2CDevice(i2cAddress);
 [`SSD1306`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/ssd1306/SSD1306.java)
 и
 [`I2CExample`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/I2CExample.java).
+
+## Низкоуровневые сообщения и события
+
+**firmata4j** позволяет отослать произвольное бинарное сообщение устройству.
+Например, установка интервала измерений значения аналоговых портов (sampling
+intervall) с использованием низкоуровневого сообщения:
+
+```java
+device.sendMessage(FirmataMessageFactory.setSamplingInterval(12));
+```
+
+Также поддерживаются обработчики низкоуровневых событий. Они могут быть полезны
+для отладки или обработки сообщений от устройства с модифицированной
+имплементацией Firmata.
+
+```java
+device.addProtocolMessageHandler(FirmataEventType.SYSEX_CUSTOM_MESSAGE, new Consumer<Event>() {
+    @Override
+    public void accept(Event evt) {
+        byte[] message = (byte[]) evt.getBodyItem(FirmataEventType.SYSEX_CUSTOM_MESSAGE);
+        byte messageType = message[0];
+        // и так далее
+    }
+});
+```
+
+## Контроль подключения
+
+Обработчики низкоуровневых событий помогают имплементировать контроль
+подключения к устройству:
+
+```java
+IODevice device = new FirmataDevice(port);
+//...
+FirmataWatchdog watchdog = new FirmataWatchdog(3000, new Runnable() {
+    @Override
+    public void run() {
+        // действия, если в течение 3000 мс не произошло ни одного низкоуровневого события
+    }
+});
+device.addProtocolMessageHandler(FirmataEventType.ANY, watchdog);
+//...
+device.start();
+```
+
+`FirmatWatchdog` активируется первым с момента регистрации сообщением. Поэтому
+экземпляр `FirmatWatchdog` должен быть зарегистрирован до начала взаимодействия
+с устройством.
+
+## Визуализация
+Визуальное представление состояний портов устройства можно получить при помощи
+компонента `JPinboard`.
+
+```java
+JPinboard pinboard = new JPinboard(device);
+JFrame frame = new JFrame("Pinboard Example");
+frame.add(pinboard);
+frame.pack();
+frame.setVisible(true);
+```
+
+`JPinboard` позволяет установить режим порта из контекстного меню. Состояние
+порта вывода может быть изменено двойным щелчком на его изображении.
+
+Пример использования `JPinboard` может быть найден в классе
+[`org.firmata4j.Example`](https://github.com/kurbatov/firmata4j/blob/master/src/main/java/org/firmata4j/Example.java).
 
 ## Версии
 **firmata4j** придерживается версий протокола Firmata. Первая доступная версия
