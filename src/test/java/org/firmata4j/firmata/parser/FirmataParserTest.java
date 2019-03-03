@@ -45,18 +45,49 @@ public class FirmataParserTest {
         };
         FirmataParser parser = new FirmataParser(fsm);
         parser.start();
-        parser.parse(new byte[] {1, 2, 3});
-        int i = 0;
-        while(eventCount.get() < 3 && i < 20) {
-            Thread.sleep(100);
-            i++;
+        try {
+            parser.parse(new byte[]{1, 2, 3});
+            int i = 0;
+            while (eventCount.get() < 3 && i < 20) {
+                Thread.sleep(100);
+                i++;
+            }
+            assertEquals(
+                    "Should receive 3 events for each byte",
+                    3,
+                    eventCount.get()
+            );
+        } finally {
+            parser.stop();
         }
-        assertEquals(
-                "Should receive 3 events for each byte",
-                3,
-                eventCount.get()
-        );
-        parser.stop();
+    }
+
+    @Test
+    public void testParseNull() throws InterruptedException {
+        final AtomicInteger eventCount = new AtomicInteger(0);
+        FiniteStateMachine fsm = new FiniteStateMachine() {
+            @Override
+            public void handle(Event event) {
+                eventCount.incrementAndGet();
+            }
+        };
+        FirmataParser parser = new FirmataParser(fsm);
+        parser.start();
+        try {
+            parser.parse(null);
+            int i = 0;
+            while (eventCount.get() == 0 && i < 10) {
+                Thread.sleep(100);
+                i++;
+            }
+            assertEquals(
+                    "Should receive no events at all with null bytes array",
+                    0,
+                    eventCount.get()
+            );
+        } finally {
+            parser.stop();
+        }
     }
 
     private static void assertIfThreadStillRunning(final String contains) throws InterruptedException {
