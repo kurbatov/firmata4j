@@ -77,7 +77,7 @@ public class FirmataParser implements Parser {
 
     @Override
     public void parse(byte[] bytes) {
-        if (!byteQueue.offer(bytes)) {
+        if (bytes != null && !byteQueue.offer(bytes)) {
             LOGGER.warn("Parser reached byte queue limit. Some bytes were skipped.");
         }
     }

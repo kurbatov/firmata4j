@@ -185,7 +185,7 @@ public class FirmataPin implements Pin {
      *
      * @param mode the mode
      */
-    void addSupprotedMode(Mode mode) {
+    void addSupportedMode(Mode mode) {
         supportedModes.add(mode);
     }
 
