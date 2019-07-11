@@ -378,7 +378,7 @@ public class FirmataDevice implements IODevice {
                         * may then safely sit in the host's much larger serial
                         * input buffer until it is dealt with by onPinStateReceive
                         */
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
                 } catch (IOException ex) {
                     LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
