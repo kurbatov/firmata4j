@@ -200,7 +200,8 @@ public class FiniteStateMachine {
         if (handler == null) {
             LOGGER.warn(
                     "Event handler is not registered for {}:{}. The event is ignored.",
-                    event.getType()
+                    event.getType(),
+                    event.getBody()
             );
         } else {
             eventHandlingExecutor.execute(new Runnable() {
