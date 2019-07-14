@@ -369,17 +369,7 @@ public class FirmataDevice implements IODevice {
                 // if the pin supports some modes, we ask for its current mode and value
                 try {
                     sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
-                    if (pinId > 0 && pinId % 14 == 0) { // 14 pins on Arduino UNO get initialized without delay
-                        /* If the pin count is too high (i.e. Arduino Mega), then
-                        * too many firmata requests in a row can overflow the
-                        * device's serial input buffer.
-                        * One solution is to yield a little time between
-                        * requests to allow the device to respond. The response
-                        * may then safely sit in the host's much larger serial
-                        * input buffer until it is dealt with by onPinStateReceive
-                        */
-                        Thread.sleep(100);
-                    }
+                    Thread.sleep(100);
                 } catch (IOException ex) {
                     LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
                 } catch (InterruptedException ex) {
