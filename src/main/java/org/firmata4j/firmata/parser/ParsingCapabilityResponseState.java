@@ -50,6 +50,7 @@ public class ParsingCapabilityResponseState extends AbstractState {
     @Override
     public void process(byte b) {
         if (b == END_SYSEX) {
+            publish(new Event(PIN_CAPABILITIES_FINISHED));
             transitTo(WaitingForMessageState.class);
         } else if (b == 127) {
             byte[] buffer = getBuffer();

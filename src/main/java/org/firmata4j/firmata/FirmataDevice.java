@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,6 +62,7 @@ public class FirmataDevice implements IODevice {
     private FiniteStateMachine protocol;
     private final Set<IODeviceEventListener> listeners = Collections.synchronizedSet(new LinkedHashSet<IODeviceEventListener>());
     private final List<FirmataPin> pins = Collections.synchronizedList(new ArrayList<FirmataPin>());
+    private final Queue<Byte> pinStateRequestQueue = new ArrayDeque<>();
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final AtomicBoolean ready = new AtomicBoolean(false);
     private final AtomicInteger initializedPins = new AtomicInteger(0);
@@ -92,6 +95,7 @@ public class FirmataDevice implements IODevice {
         protocol.addHandler(PROTOCOL_MESSAGE, onProtocolReceive);
         protocol.addHandler(FIRMWARE_MESSAGE, onFirmwareReceive);
         protocol.addHandler(PIN_CAPABILITIES_MESSAGE, onCapabilitiesReceive);
+        protocol.addHandler(PIN_CAPABILITIES_FINISHED, onCapabilitiesFinished);
         protocol.addHandler(PIN_STATE, onPinStateReceive);
         protocol.addHandler(ANALOG_MAPPING_MESSAGE, onAnalogMappingReceive);
         protocol.addHandler(ANALOG_MESSAGE_RESPONSE, onAnalogMessageReceive);
@@ -367,24 +371,29 @@ public class FirmataDevice implements IODevice {
                 initializedPins.incrementAndGet();
             } else {
                 // if the pin supports some modes, we ask for its current mode and value
+                pinStateRequestQueue.add(pinId);
+            }
+        }
+    };
+    
+    /**
+     * Called when capabilities for the all the pins are received.
+     */
+    private final Consumer<Event> onCapabilitiesFinished = new Consumer<Event>() {
+        @Override
+        public void accept(Event t) {
+            if (initializedPins.get() == pins.size()) {
+                try {
+                    sendMessage(FirmataMessageFactory.ANALOG_MAPPING_REQUEST);
+                } catch (IOException e) {
+                    LOGGER.error("Error requesting of the analog mapping", e);
+                }
+            } else {
+                byte pinId = pinStateRequestQueue.poll();
                 try {
                     sendMessage(FirmataMessageFactory.pinStateRequest(pinId));
-                    if (pinId > 0 && pinId % 14 == 0) { // 14 pins on Arduino UNO get initialized without delay
-                        /* If the pin count is too high (i.e. Arduino Mega), then
-                        * too many firmata requests in a row can overflow the
-                        * device's serial input buffer.
-                        * One solution is to yield a little time between
-                        * requests to allow the device to respond. The response
-                        * may then safely sit in the host's much larger serial
-                        * input buffer until it is dealt with by onPinStateReceive
-                        */
-                        Thread.sleep(100);
-                    }
                 } catch (IOException ex) {
-                    LOGGER.error(String.format("Error requesting state of pin %d", pin.getIndex()), ex);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    LOGGER.warn("Delay between capability requests was interrupted", ex);
+                    LOGGER.error(String.format("Error requesting state of pin %d", pinId), ex);
                 }
             }
         }
@@ -404,11 +413,19 @@ public class FirmataDevice implements IODevice {
             } else {
                 pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
             }
+            if (!pinStateRequestQueue.isEmpty()) {
+                byte pid = pinStateRequestQueue.poll();
+                try {
+                    sendMessage(FirmataMessageFactory.pinStateRequest(pid)); // request the following pin state
+                } catch (IOException ex) {
+                    LOGGER.error(String.format("Error requesting state of pin %d", pid), ex);
+                }
+            }
             if (initializedPins.incrementAndGet() == pins.size()) {
                 try {
                     sendMessage(FirmataMessageFactory.ANALOG_MAPPING_REQUEST);
                 } catch (IOException e) {
-                    LOGGER.error("Error on request analog mapping", e);
+                    LOGGER.error("Error requesting of the analog mapping", e);
                 }
             }
         }

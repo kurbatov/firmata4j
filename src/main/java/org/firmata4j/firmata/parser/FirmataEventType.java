@@ -56,6 +56,7 @@ public interface FirmataEventType {
     String PIN_SUPPORTED_MODES = "supportedModes";
     String PIN_MODE = "pinMode";
     String PIN_VALUE = "pinValue";
+    String PIN_CAPABILITIES_FINISHED = "pinCapabilitiesFinished";
     
     String SYSTEM_RESET_MESSAGE = "systemReset";
     
