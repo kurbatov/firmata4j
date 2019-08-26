@@ -22,7 +22,7 @@ Java.
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.7</version>
+    <version>2.3.8</version>
 </dependency>
 ```
 
