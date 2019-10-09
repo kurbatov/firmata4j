@@ -185,7 +185,10 @@ public class FirmataDevice implements IODevice {
         long timeout = 100;
         while (!isReady()) {
             if (timePassed >= TIMEOUT) {
-                throw new InterruptedException("Connection timeout");
+                throw new InterruptedException("Connection timeout.\n"
+                        + "Please, make sure the board runs a firmware that supports Firmata protocol.\n"
+                        + "The firmware has to implement callbacks for CAPABILITY_QUERY, PIN_STATE_QUERY and ANALOG_MAPPING_QUERY in order for the initialization to work."
+                );
             }
             timePassed += timeout;
             Thread.sleep(timeout);
