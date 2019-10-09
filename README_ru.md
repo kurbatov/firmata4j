@@ -212,10 +212,22 @@ Arduino IDE содержит реализацию протокола Firmata. Ч
 - Выбрать порт в `Tools -> Port` (уже выбрано, если вы ранее загружали что-либо на Arduino)
 - Нажать кнопку `Upload`
 
+Обратите внимание, что **firmata4j** фокусируется на том, чтобы работать с
+прошивкой `StandardFirmata`. Несмотря на то, что существуют другие прошивки с
+поддержкой Firmata, некоторые из них поддерживают только избранные функции
+протокола. Чтобы **firmata4j** смогла пройти инициализацию, прошивка должна
+отвечать на следующие запросы: 
+
+- `REPORT_FIRMWARE`
+- `CAPABILITY_QUERY`
+- `PIN_STATE_QUERY`
+- `ANALOG_MAPPING_QUERY`
+
 ## Примеры использования
 
 - [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
 - [Modelovanie a Riadenie Hybridných Systémov s Využitím Petriho Sietí Vyšších Úrovní](http://www.fei.stuba.sk/docs/2016/autoreferaty/autoref_Kucera.pdf)
+- [Programmazione di Sistemi Embedded con Linguaggi ad Agenti: un Caso di Studio basato su Jason e Arduino](https://amslaurea.unibo.it/9188/1/cozzolino_francesco_tesi.pdf)
 - [Использование **firmata4j** в Closure](https://github.com/cowlike/firmata4j-samples-clojure)
 
 ## Развитие библиотеки

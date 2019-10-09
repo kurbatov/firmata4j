@@ -204,10 +204,21 @@ upload it as follows:
 - Select the port in `Tools -> Port` (it is already selected if you have uploaded something to your Arduino)
 - Click on `Upload` button
 
+Note that **firmata4j** is focused to be client for the `StandardFirmata` firmware.
+Although there are several other firmwares that support Firmata protocol, those
+may implement only a featured subset of the protocol. A firmware has to respond
+to the following requests in order for **firmata4j** to initialize properly:
+
+- `REPORT_FIRMWARE`
+- `CAPABILITY_QUERY`
+- `PIN_STATE_QUERY`
+- `ANALOG_MAPPING_QUERY`
+
 ## Cases
 
 - [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
 - [Modelovanie a Riadenie Hybridných Systémov s Využitím Petriho Sietí Vyšších Úrovní](http://www.fei.stuba.sk/docs/2016/autoreferaty/autoref_Kucera.pdf)
+- [Programmazione di Sistemi Embedded con Linguaggi ad Agenti: un Caso di Studio basato su Jason e Arduino](https://amslaurea.unibo.it/9188/1/cozzolino_francesco_tesi.pdf)
 - [Using **firmata4j** in Closure](https://github.com/cowlike/firmata4j-samples-clojure)
 
 ## Contributing
