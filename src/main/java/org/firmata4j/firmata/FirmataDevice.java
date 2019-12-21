@@ -44,7 +44,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.firmata4j.firmata.parser.FirmataEventType.*;
@@ -71,6 +74,7 @@ public class FirmataDevice implements IODevice {
     private volatile Map<String, Object> firmwareInfo;
     private volatile Map<Integer, Integer> analogMapping;
     
+    private static final ThreadFactory THREAD_FACTORY = new DaemonThreadFactory("firmata-event-handler");
     private static final long TIMEOUT = 15000L;
     private static final Logger LOGGER = LoggerFactory.getLogger(FirmataDevice.class);
 
@@ -90,8 +94,26 @@ public class FirmataDevice implements IODevice {
      * @param transport the communication channel
      */
     public FirmataDevice(TransportInterface transport) {
+        final ExecutorService executor = Executors.newSingleThreadExecutor(THREAD_FACTORY);
+        addEventListener(new OnStopListener() {
+            @Override
+            public void accept(IOEvent event) {
+                executor.shutdown();
+                try {
+                    if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                        executor.shutdownNow();
+                        if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                            LOGGER.error("Cannot stop an event handling executor. It may result in a thread leak.");
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    executor.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
         protocol = new FiniteStateMachine(WaitingForMessageState.class);
-        protocol.setEventHandlingExecutor(Executors.newSingleThreadExecutor(new DaemonThreadFactory("firmata-event-handler")));
+        protocol.setEventHandlingExecutor(executor);
         protocol.addHandler(PROTOCOL_MESSAGE, onProtocolReceive);
         protocol.addHandler(FIRMWARE_MESSAGE, onFirmwareReceive);
         protocol.addHandler(PIN_CAPABILITIES_MESSAGE, onCapabilitiesReceive);
@@ -169,7 +191,6 @@ public class FirmataDevice implements IODevice {
         for (IODeviceEventListener l : listeners) {
             l.onStop(event);
         }
-
     }
 
     @Override
