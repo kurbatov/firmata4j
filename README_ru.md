@@ -8,6 +8,7 @@ Java.
 
 ## Возможности
 - Взаимодействие с устройством и с его портами в объектно-ориентированном стиле
+- Коммуникация через последовательный порт, сеть или авторский транспортный слой
 - Позволяет абстрагироваться от деталей протокола
 - Предоставляет графический компонент для визуализации и изменения режима и
 состояния портов устройства
@@ -228,7 +229,7 @@ Arduino IDE содержит реализацию протокола Firmata. Ч
 - [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
 - [Modelovanie a Riadenie Hybridných Systémov s Využitím Petriho Sietí Vyšších Úrovní](http://www.fei.stuba.sk/docs/2016/autoreferaty/autoref_Kucera.pdf)
 - [Programmazione di Sistemi Embedded con Linguaggi ad Agenti: un Caso di Studio basato su Jason e Arduino](https://amslaurea.unibo.it/9188/1/cozzolino_francesco_tesi.pdf)
-- [Использование **firmata4j** в Closure](https://github.com/cowlike/firmata4j-samples-clojure)
+- [Использование **firmata4j** в Clojure](https://github.com/cowlike/firmata4j-samples-clojure)
 
 ## Развитие библиотеки
 Помощь в развитии библиотеки всегда приветствуется. Если вы нашли ошибку или

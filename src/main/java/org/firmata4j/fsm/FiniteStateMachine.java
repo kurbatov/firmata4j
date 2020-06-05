@@ -199,7 +199,7 @@ public class FiniteStateMachine {
         final Consumer<Event> handler = handlers.get(event.getType());
         if (handler == null) {
             LOGGER.warn(
-                    "Event handler is not registered for {}:{}. The event is ignored.",
+                    "No specific event handler is registered for {}:{}.",
                     event.getType(),
                     event.getBody()
             );

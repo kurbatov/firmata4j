@@ -7,6 +7,7 @@ runs Firmata protocol from your java program.
 
 ## Capabilities
 - Interaction with a board and its pins in object-oriented style
+- Communication over serial port, network or custom transport layer
 - Abstraction over details of the protocol
 - Provides an UI component that visualize the current state of every pin and
 allows changing their mode and state
@@ -219,7 +220,7 @@ to the following requests in order for **firmata4j** to initialize properly:
 - [Easy Peripherals for the Internet of Things](https://repositorio-aberto.up.pt/bitstream/10216/84433/2/138208.pdf)
 - [Modelovanie a Riadenie Hybridných Systémov s Využitím Petriho Sietí Vyšších Úrovní](http://www.fei.stuba.sk/docs/2016/autoreferaty/autoref_Kucera.pdf)
 - [Programmazione di Sistemi Embedded con Linguaggi ad Agenti: un Caso di Studio basato su Jason e Arduino](https://amslaurea.unibo.it/9188/1/cozzolino_francesco_tesi.pdf)
-- [Using **firmata4j** in Closure](https://github.com/cowlike/firmata4j-samples-clojure)
+- [Using **firmata4j** in Clojure](https://github.com/cowlike/firmata4j-samples-clojure)
 
 ## Contributing
 Contributions are welcome. If you discover a bug or would like to propose a new
