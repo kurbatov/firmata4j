@@ -42,6 +42,12 @@
             <artifactId>jssc</artifactId>
             <version>${jssc.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>2.6.2</version>
+            <optional>true</optional>
+        </dependency>
         
         <dependency>
             <groupId>org.slf4j</groupId>
