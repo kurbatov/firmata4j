@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2021 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,71 +33,57 @@ import com.fazecast.jSerialComm.SerialPortEvent;
 
 /**
  * Implementation of {@link TransportInterface} based on {@link SerialPort}.
- * 
+ *
  * @author Norbert Sándor
  */
-public class JSerialCommTransport implements TransportInterface
-{
+public class JSerialCommTransport implements TransportInterface {
+
     private final SerialPort serialPort;
 
     private Parser parser;
 
-    public JSerialCommTransport(String portDescriptor)
-    {
+    public JSerialCommTransport(String portDescriptor) {
         serialPort = SerialPort.getCommPort(portDescriptor);
     }
 
     @Override
-    public void start() throws IOException
-    {
-        if (!serialPort.isOpen())
-        {
-            if (serialPort.openPort())
-            {
-                serialPort.setComPortParameters(jssc.SerialPort.BAUDRATE_57600, jssc.SerialPort.DATABITS_8,
-                        SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
-                serialPort.addDataListener(new SerialPortDataListener()
-                {
+    public void start() throws IOException {
+        if (!serialPort.isOpen()) {
+            if (serialPort.openPort()) {
+                serialPort.setComPortParameters(57600, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
+                serialPort.addDataListener(new SerialPortDataListener() {
                     @Override
-                    public void serialEvent(SerialPortEvent event)
-                    {
-                        if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_RECEIVED)
-                        {
+                    public void serialEvent(SerialPortEvent event) {
+                        if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_RECEIVED) {
                             parser.parse(event.getReceivedData());
                         }
                     }
 
                     @Override
-                    public int getListeningEvents()
-                    {
+                    public int getListeningEvents() {
                         return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
                     }
                 });
-            } else
-            {
+            } else {
                 throw new IOException("Cannot start firmata device: port=" + serialPort);
             }
         }
     }
 
     @Override
-    public void stop() throws IOException
-    {
-        if (serialPort.isOpen() && !serialPort.closePort())
-        {
+    public void stop() throws IOException {
+        if (serialPort.isOpen() && !serialPort.closePort()) {
             throw new IOException("Cannot properly stop firmata device: port=" + serialPort);
         }
     }
 
     @Override
-    public void write(byte[] bytes) throws IOException
-    {
+    public void write(byte[] bytes) throws IOException {
         serialPort.writeBytes(bytes, bytes.length);
     }
 
     @Override
-    public void setParser(Parser parser)
-    {
+    public void setParser(Parser parser) {
         this.parser = parser;
     }
 }

@@ -9,9 +9,9 @@ runs Firmata protocol from your java program.
 - Interaction with a board and its pins in object-oriented style
 - Communication over serial port, network or custom transport layer
 - Abstraction over details of the protocol
-- Provides an UI component that visualize the current state of every pin and
-allows changing their mode and state
-- Allows communicating with I2C devices
+- Provides a UI component that visualize the current state of pins and allows
+changing their mode and state
+- Allows communicating with I2C devices connected to the board
 
 ## Installation
 
@@ -22,9 +22,35 @@ Add the following dependency to `pom.xml` of your project:
 <dependency>
     <groupId>com.github.kurbatov</groupId>
     <artifactId>firmata4j</artifactId>
-    <version>2.3.8</version>
+    <version>2.3.9</version>
 </dependency>
 ```
+
+If you want to connect to the device via serial port (which is the most probable
+case), please include one of the following libraries as a dependency into
+the `pom.xml`:
+
+```xml
+<!-- only one of the following -->
+<dependency>
+    <groupId>com.fazecast</groupId>
+    <artifactId>jSerialComm</artifactId>
+    <version>2.6.2</version>
+</dependency>
+<!-- or -->
+<dependency>
+    <groupId>org.scream3r</groupId>
+    <artifactId>jssc</artifactId>
+    <version>2.8.0</version>
+</dependency>
+```
+
+**jssc** is an older library that worked just fine until recently. Now it reveals
+[issues on **GraalVM** and latest updates of **Windows 10**](https://github.com/kurbatov/firmata4j/issues/42).
+**firmata4j** was using **jssc** by default in versions prior to **2.3.9**.
+
+**jSerialComm** has proven itself to be working on **GraalVM** and latest
+updates of **Windows 10**.
 
 ## Usage
 General scenario of usage is following:
