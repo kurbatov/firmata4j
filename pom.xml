@@ -33,12 +33,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.resource.directory>src/main/resources</project.resource.directory>
         <test.resource.directory>src/test/resources</test.resource.directory>
-        <jssc.version>2.8.0</jssc.version>
+        <jssc.version>2.9.4</jssc.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.scream3r</groupId>
+            <groupId>io.github.java-native</groupId>
             <artifactId>jssc</artifactId>
             <version>${jssc.version}</version>
         </dependency>
