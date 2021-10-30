@@ -111,6 +111,14 @@
                     <goals>deploy</goals>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <mainClass>org.firmata4j.Example</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     
