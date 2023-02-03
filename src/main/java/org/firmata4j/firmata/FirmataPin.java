@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2021 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -132,28 +132,11 @@ public class FirmataPin implements Pin {
         byte[] message;
         long newValue;
         if (currentMode == Mode.OUTPUT) {
-            //have to calculate the value of whole port (8-pin set) the pin sits in
-            byte portId = (byte) (pinId / 8);
-            byte pinInPort = (byte) (pinId % 8);
-            byte portValue = 0;
-            for (int i = 0; i < 8; i++) {
-                Pin p = device.getPin(portId * 8 + i);
-                if (p.getMode() == Mode.OUTPUT && p.getValue() > 0) {
-                    portValue |= 1 << i;
-                }
-            }
-            byte bitmask = (byte) (1 << pinInPort);
-            boolean val = value > 0;
-            if (val) {
-                portValue |= bitmask;
-            } else {
-                portValue &= ((byte) ~bitmask);
-            }
-            message = FirmataMessageFactory.setDigitalPinValue(portId, portValue);
-            newValue = val ? 1 : 0;
+            newValue = value > 0 ? 1 : 0;
+            message = FirmataMessageFactory.setDigitalPortValue(pinId, (byte) newValue);
         } else if (currentMode == Mode.ANALOG || currentMode == Mode.PWM || currentMode == Mode.SERVO) {
-            message = FirmataMessageFactory.setAnalogPinValue(pinId, value);
             newValue = value;
+            message = FirmataMessageFactory.setAnalogPinValue(pinId, newValue);
         } else {
             throw new IllegalStateException(String.format("Port %d is in %s mode and its value cannot be set.", pinId, currentMode));
         }

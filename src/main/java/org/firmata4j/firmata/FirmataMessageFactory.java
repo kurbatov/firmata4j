@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2021 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -212,9 +212,9 @@ public class FirmataMessageFactory {
     }
 
     /**
-     * Creates Firmata message to set digital values of port's pins.<br/>
+     * Creates Firmata message to set digital values of port's pins.<br>
      * Digital value should be assigned to a set of pins at once. A set of pins
-     * is called port.<br/>
+     * is called port.<br>
      * A port contains 8 pins. Digital value of every pin in a set transfers in
      * one byte. Every bit in the byte represents state of pin's output.
      *
@@ -222,12 +222,23 @@ public class FirmataMessageFactory {
      * @param value values of port's pins
      * @return Firmata message to set digital output
      */
-    public static byte[] setDigitalPinValue(byte portId, byte value) {
+    public static byte[] setDigitalPortValue(byte portId, byte value) {
         return new byte[]{(byte) (DIGITAL_MESSAGE | (portId & 0x0F)), (byte) (value & 0x7F), (byte) ((value >>> 7) & 0x7F)};
+    }
+    
+    /**
+     * Creates Firmata message to set digital values of a pin.
+     *
+     * @param pinId index of a pin
+     * @param value value of the pin (0 or 1)
+     * @return Firmata message to set the value of a digital output pin
+     */
+    public static byte[] setDigitalPinValue(byte pinId, byte value) {
+        return new byte[]{SET_DIGITAL_PIN_VALUE, pinId, value};
     }
 
     /**
-     * Creates Firmata message to set value of an output pin in PWM mode.<br/>
+     * Creates Firmata message to set value of an output pin in PWM mode.<br>
      * If pin id is beyond 15th or value is greater than we can put into
      * standard analog message, extended analog message is built.
      *
@@ -255,7 +266,7 @@ public class FirmataMessageFactory {
     }
 
     /**
-     * Creates a message to set sampling interval.<br/>
+     * Creates a message to set sampling interval.<br>
      * The sampling interval sets how often analog data and i2c data is reported
      * to the client. The default value is 19 milliseconds.
      *
@@ -272,7 +283,7 @@ public class FirmataMessageFactory {
     }
 
     /**
-     * Builds servo configuration message.<br/>
+     * Builds servo configuration message.<br>
      * The core idea is to just add a "config" message, then use
      * {@link #setMode(byte, org.firmata4j.Pin.Mode)} to attach/detach Servo
      * support to a pin. Then the normal {@link #setAnalogPinValue(byte, long)}

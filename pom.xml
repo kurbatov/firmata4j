@@ -41,6 +41,7 @@
             <groupId>io.github.java-native</groupId>
             <artifactId>jssc</artifactId>
             <version>${jssc.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fazecast</groupId>

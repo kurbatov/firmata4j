@@ -27,6 +27,32 @@ Java.
 </dependency>
 ```
 
+Если вы хотите подключаться к устройству по последовательному порту (что весьма
+вероятно), добавьте одну из следующих библиотек в файл `pom.xml`:
+
+```xml
+<!-- только одну из библиотек -->
+<dependency>
+    <groupId>com.fazecast</groupId>
+    <artifactId>jSerialComm</artifactId>
+    <version>2.6.2</version>
+</dependency>
+<!-- или -->
+<dependency>
+    <groupId>com.fazecast</groupId>
+    <artifactId>jssc</artifactId>
+    <version>2.9.4</version>
+</dependency>
+```
+
+**jscc** - более старая библиотека, которая работала без нареканий до последнего
+времени. Сейчас обнаружились [проблемы в работе на **GraalVM** и с последними
+обновлениями **Windows 10**](https://github.com/kurbatov/firmata4j/issues/42).
+**firmata4j** использовала **jssc** по-умолчанию во всех версиях до **2.3.9**.
+
+**jSerialComm** показала себя как рабочий вариант на **GraalVM** и с последними
+обновлениями **Windows 10**.
+
 ## Использование
 Основной сценарий использования:
 ```java
