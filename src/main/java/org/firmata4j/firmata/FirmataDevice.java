@@ -433,9 +433,6 @@ public class FirmataDevice implements IODevice {
             FirmataPin pin = pins.get(pinId);
             if (pin.getMode() == null) {
                 pin.initMode(Pin.Mode.resolve((Byte) event.getBodyItem(PIN_MODE)));
-                pin.initValue((Long) event.getBodyItem(PIN_VALUE));
-            } else {
-                pin.updateValue((Long) event.getBodyItem(PIN_VALUE));
             }
             if (!pinStateRequestQueue.isEmpty()) {
                 byte pid = pinStateRequestQueue.poll();
