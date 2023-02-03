@@ -39,7 +39,7 @@ the `pom.xml`:
 </dependency>
 <!-- or -->
 <dependency>
-    <groupId>com.fazecast</groupId>
+    <groupId>io.github.java-native</groupId>
     <artifactId>jssc</artifactId>
     <version>2.9.4</version>
 </dependency>
