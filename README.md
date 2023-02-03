@@ -39,9 +39,9 @@ the `pom.xml`:
 </dependency>
 <!-- or -->
 <dependency>
-    <groupId>org.scream3r</groupId>
+    <groupId>com.fazecast</groupId>
     <artifactId>jssc</artifactId>
-    <version>2.8.0</version>
+    <version>2.9.4</version>
 </dependency>
 ```
 
