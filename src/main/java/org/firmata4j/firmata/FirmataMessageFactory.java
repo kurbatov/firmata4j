@@ -222,19 +222,8 @@ public class FirmataMessageFactory {
      * @param value values of port's pins
      * @return Firmata message to set digital output
      */
-    public static byte[] setDigitalPortValue(byte portId, byte value) {
+    public static byte[] setDigitalPinValue(byte portId, byte value) {
         return new byte[]{(byte) (DIGITAL_MESSAGE | (portId & 0x0F)), (byte) (value & 0x7F), (byte) ((value >>> 7) & 0x7F)};
-    }
-    
-    /**
-     * Creates Firmata message to set digital values of a pin.
-     *
-     * @param pinId index of a pin
-     * @param value value of the pin (0 or 1)
-     * @return Firmata message to set the value of a digital output pin
-     */
-    public static byte[] setDigitalPinValue(byte pinId, byte value) {
-        return new byte[]{SET_DIGITAL_PIN_VALUE, pinId, value};
     }
 
     /**
