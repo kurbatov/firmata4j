@@ -24,17 +24,23 @@
 package org.firmata4j;
 
 /**
- * Allows interactions with with OneWire devices attached to the same bus.
+ * Allows interactions with OneWire devices attached to the same bus.
  *
  * @author Oleg Kurbatov &lt;o.v.kurbatov@gmail.com&gt;
  */
 public interface OneWireBus {
     
     /**
-     * Seraces for all devices on the bus.
+     * Searches for all devices on the bus.
      * @return array of identifiers for available devices
      */
     int[] search();
+    
+    /**
+     * Searches devices on the bus that are in alarmed state.
+     * @return array of identifiers for alarmed devices
+     */
+    int[] searchAlarms();
     
     /**
      * Searches for devices on the bus.
