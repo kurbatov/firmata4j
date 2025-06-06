@@ -515,7 +515,7 @@ public class FirmataDevice implements IODevice {
         @Override
         public void accept(Event event) {
             byte address = (Byte) event.getBodyItem(I2C_ADDRESS);
-            int register = (Integer) event.getBodyItem(I2C_REGISTER);
+            int register = ((Number) event.getBodyItem(I2C_REGISTER)).intValue();
             byte[] message = (byte[]) event.getBodyItem(I2C_MESSAGE);
             FirmataI2CDevice device = i2cDevices.get(address);
             if (device != null) {
