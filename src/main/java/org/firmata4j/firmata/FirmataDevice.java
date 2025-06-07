@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2023 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -347,14 +347,14 @@ public class FirmataDevice implements IODevice {
         @Override
         public void accept(Event event) {
             if (!event.getBodyItem(PROTOCOL_MAJOR).equals((int) FIRMATA_MAJOR_VERSION)) {
-                LOGGER.error("Current version of firmata protocol on device ({}.{}) is not compatible with version of firmata4j ({}.{}).",
+                LOGGER.error("Current version of firmata protocol on the device ({}.{}) is not compatible with the version of firmata4j ({}.{}).",
                         event.getBodyItem(PROTOCOL_MAJOR),
                         event.getBodyItem(PROTOCOL_MINOR),
                         FIRMATA_MAJOR_VERSION,
                         FIRMATA_MINOR_VERSION);
             } else if (!event.getBodyItem(PROTOCOL_MINOR).equals((int) FIRMATA_MINOR_VERSION)) {
-                LOGGER.warn("Current version of firmata protocol on device ({}.{}) differs from version supported by firmata4j ({}.{})."
-                                + " Though these are compatible you may experience some issues.",
+                LOGGER.warn("Current version of firmata protocol on the device ({}.{}) differs from the version supported by firmata4j ({}.{})."
+                                + " These versions are compatible but you may experience some issues.",
                         event.getBodyItem(PROTOCOL_MAJOR),
                         event.getBodyItem(PROTOCOL_MINOR),
                         FIRMATA_MAJOR_VERSION,

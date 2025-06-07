@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2019 Oleg Kurbatov (o.v.kurbatov@gmail.com)
+ * Copyright (c) 2014-2023 Oleg Kurbatov (o.v.kurbatov@gmail.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,12 +42,23 @@ import org.slf4j.LoggerFactory;
  */
 public class FiniteStateMachine {
 
+    public static final String ALL_EVENTS = "*";
     public static final String FSM_IS_IN_TERMINAL_STATE = "fsm is in terminal state";
     private static final Logger LOGGER = LoggerFactory.getLogger(FiniteStateMachine.class);
+    private static final Consumer<Event> DEFAULT_HANDLER = new Consumer<Event>() {
+        @Override
+        public void accept(Event event) {
+            LOGGER.warn(
+                "No specific event handler is registered for {}:{}.",
+                event.getType(),
+                event.getBody()
+            );
+        }
+    };
     private final Map<String, Consumer<Event>> handlers;
     private Executor eventHandlingExecutor = DirectExecutor.INSTANCE;
     private State currentState;
-
+    
     /**
      * Constructs the finite state machine in the terminal state, i.e. without
      * any particular current state. So that it will do noting on
@@ -56,7 +67,7 @@ public class FiniteStateMachine {
      */
     public FiniteStateMachine() {
         handlers = new ConcurrentHashMap<>();
-        handlers.put("*", new Consumer<Event>() {
+        handlers.put(ALL_EVENTS, new Consumer<Event>() {
             @Override
             public void accept(Event t) {
                 // default wildcard handler does nothing
@@ -196,25 +207,11 @@ public class FiniteStateMachine {
      * @param event the event
      */
     public void handle(final Event event) {
-        final Consumer<Event> handler = handlers.get(event.getType());
-        if (handler == null) {
-            LOGGER.warn(
-                    "No specific event handler is registered for {}:{}.",
-                    event.getType(),
-                    event.getBody()
-            );
-        } else {
-            eventHandlingExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    handler.accept(event);
-                }
-            });
-        }
         eventHandlingExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                handlers.get("*").accept(event);
+                handlers.getOrDefault(event.getType(), DEFAULT_HANDLER).accept(event);
+                handlers.get(ALL_EVENTS).accept(event);
             }
         });
     }
